@@ -23,7 +23,7 @@ export class LoginComponent {
     const user = this.users[this.username as keyof typeof this.users];
     if (user && user.password === this.password) {
       localStorage.setItem('user', JSON.stringify(user));
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/home']);
     } else {
       this.error = 'Invalid username or password';
     }
