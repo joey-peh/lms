@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build lms-spa --output-path=docs --base-href=/lms/",
+    "build": "ng build",
+    "build:git": "ng build lms-spa --output-path=docs --base-href=/lms/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
