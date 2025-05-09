@@ -1,2 +1,2 @@
-export class Login {
+export interface Login {
 }
