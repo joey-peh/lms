@@ -1,0 +1,20 @@
+﻿topic_id,topic_title,topic_content,topic_created_at,topic_deleted_at,topic_state,course_id,topic_posted_by_user_id
+112098,title01,title01_content,2024-06-18 16:45:10,NA,active,23409,80299
+100125,title04,title04_content,2024-05-12 13:08:24,NA,active,75861,89721
+195635,title06,title06_content,2024-12-02 21:03:14,NA,active,34290,78926
+198178,title13,title13_content,2025-01-25 14:17:41,NA,active,15697,79075
+122037,title16,title16_content,2024-06-25 01:01:14,NA,active,22376,99977
+122020,title02,title02_content,2024-06-29 10:08:45,NA,active,23409,80299
+101123,title05,title05_content,2024-05-24 22:15:38,NA,active,75861,89721
+202190,title14,title14_content,2025-04-15 16:26:12,NA,active,15697,79075
+140258,title17,title17_content,2024-07-20 11:41:13,NA,active,22376,99977
+140314,title19,title19_content,2024-08-12 22:14:36,NA,active,22376,99977
+198104,title07,title07_content,2025-01-22 08:01:25,NA,active,34290,78926
+140241,title03,title03_content,2024-07-17 12:28:13,NA,active,23409,80299
+202013,title15,title15_content,2025-05-02 12:01:14,NA,unpublished,15697,79075
+202145,title08,title08_content,2025-03-16 09:35:09,NA,active,34290,78926
+202154,title09,title09_content,2025-03-18 23:04:39,NA,active,34290,78926
+202156,title10,title10_content,2025-03-18 23:07:01,NA,active,34290,78926
+202161,title11,title11_content,2025-03-18 23:12:25,NA,active,34290,78926
+202162,title12,title12_content,2025-03-18 23:14:46,2025-04-02 02:36:38,deleted,34290,78926
+140279,title18,title18_content,2024-07-26 21:05:23,NA,active,22376,99977
