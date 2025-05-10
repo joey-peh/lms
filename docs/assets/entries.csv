@@ -1,0 +1,36 @@
+﻿entry_id,entry_content,entry_created_at,entry_deleted_at,entry_state,entry_parent_id,entry_posted_by_user_id,topic_id
+3678,entry_content_01,2024-05-14 15:04:25,NA,active,NA,5420,100125
+3916,entry_content_03,2024-05-25 12:25:08,NA,active,NA,8300,101123
+4204,entry_content_06,2024-06-18 16:45:10,NA,active,NA,28772,112098
+4206,entry_content_07,2024-06-18 16:52:12,NA,active,NA,28442,112098
+4207,entry_content_08,2024-06-18 17:12:14,NA,active,4206,74764,112098
+4208,entry_content_09,2024-06-18 17:19:25,NA,active,4206,4932,112098
+4213,entry_content_10,2024-06-18 16:01:56,NA,active,4208,38625,112098
+3781,entry_content_02,2024-05-16 10:24:45,NA,active,NA,5972,100125
+3927,entry_content_04,2024-05-25 19:37:18,NA,active,NA,70572,101123
+3945,entry_content_05,2024-05-26 09:15:20,NA,active,3916,11602,101123
+4226,entry_content_11,2024-06-29 15:12:15,NA,active,NA,40314,122020
+7649,entry_content_12,2024-12-02 21:03:14,NA,active,NA,9646,195635
+8903,entry_content_13,2025-01-25 14:17:41,NA,active,NA,43745,198178
+8904,entry_content_14,2025-01-25 14:25:11,NA,active,NA,43745,198178
+8905,entry_content_15,2025-01-25 14:27:35,NA,active,NA,44866,198178
+8908,entry_content_16,2025-01-25 14:38:02,NA,active,NA,68829,198178
+8909,entry_content_17,2025-01-25 14:47:14,NA,active,NA,95916,198178
+8911,entry_content_18,2025-01-25 14:49:45,NA,active,NA,80034,198178
+8912,entry_content_19,2025-01-25 14:57:12,NA,active,NA,79075,198178
+8913,entry_content_20,2025-01-25 15:27:01,NA,active,NA,24035,198178
+8914,entry_content_21,2025-01-25 15:31:25,NA,active,NA,26701,198178
+8920,entry_content_22,2025-01-25 16:35:10,2025-01-26 09:15:24,deleted,NA,85270,198178
+9567,entry_content_23,2025-04-15 19:13:21,NA,active,NA,12464,202190
+9578,entry_content_24,2025-04-15 19:14:22,NA,active,9567,43616,202190
+9580,entry_content_25,2025-04-15 19:23:23,NA,active,9578,63326,202190
+9582,entry_content_26,2025-04-15 19:33:24,NA,active,9580,19798,202190
+9599,entry_content_27,2025-04-15 19:48:15,NA,active,9578,46277,202190
+9602,entry_content_28,2025-04-15 20:13:26,NA,active,9578,47907,202190
+9614,entry_content_29,2025-04-15 20:19:16,NA,active,9578,63718,202190
+4108,entry_content_30,2024-06-26 16:23:11,NA,active,NA,38932,122037
+4120,entry_content_31,2024-06-27 12:13:34,NA,active,NA,40939,122037
+4367,entry_content_32,2024-07-29 11:14:45,NA,active,NA,41703,140279
+4309,entry_content_33,2024-07-20 12:11:34,NA,active,NA,88696,140241
+4313,entry_content_34,2024-07-20 14:23:16,NA,active,NA,37355,140241
+4325,entry_content_35,2024-07-22 21:01:25,2024-07-22 22:26:53,deleted,NA,95856,140241
