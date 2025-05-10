@@ -19,6 +19,9 @@ import { CardComponent } from './components/card/card.component';
 import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { EnrolmentChartComponent } from './components/enrolment-chart/enrolment-chart.component';
 import { provideHttpClient, withFetch } from '@angular/common/http';
+import { MiniCardComponent } from './components/mini-card/mini-card.component';
+import { UserComponent } from './components/user/user.component';
+import { CourseComponent } from './components/course/course.component';
 
 
 @NgModule({
@@ -28,7 +31,10 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
     DashboardComponent,
     NavComponent,
     CardComponent,
-    EnrolmentChartComponent
+    EnrolmentChartComponent,
+    MiniCardComponent,
+    UserComponent,
+    CourseComponent
   ],
   imports: [
     BrowserModule,

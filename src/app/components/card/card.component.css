@@ -28,3 +28,13 @@
     display: flex;
     flex-direction: column;
  }
+ 
+ .clickable-card {
+   cursor: pointer;
+   transition: box-shadow 0.2s ease;
+ }
+ 
+ .clickable-card:hover {
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+   background-color: #f1f1f1;
+ }

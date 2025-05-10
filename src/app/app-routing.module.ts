@@ -3,21 +3,41 @@ import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { NavComponent } from './components/navigation/navigation.component';
+import { LocationStrategy, HashLocationStrategy } from '@angular/common';
+import { AuthGuard } from './auth.guard';
+import { UserComponent } from './components/user/user.component';
+import { CourseComponent } from './components/course/course.component';
 
 const routes: Routes = [
   {
-    path: 'home',
+    path: '',
     component: NavComponent,
     children: [
-      { path: '', component: DashboardComponent }
+      {
+        path: 'home',
+        component: DashboardComponent,
+        canActivate: [AuthGuard],
+      },      
+      {
+        path: 'user',
+        component: UserComponent,
+        canActivate: [AuthGuard],
+      },
+      {
+        path: 'course',
+        component: CourseComponent,
+        canActivate: [AuthGuard],
+      }
     ]
   },
   { path: 'login', component: LoginComponent },
-  { path: '**', redirectTo: 'login'}
+  { path: '**', redirectTo: 'login' }
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes, { useHash: true })],
-  exports: [RouterModule]
+  exports: [RouterModule],
+  providers: [
+    { provide: LocationStrategy, useClass: HashLocationStrategy }]
 })
 export class AppRoutingModule { }

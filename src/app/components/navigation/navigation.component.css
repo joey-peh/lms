@@ -15,3 +15,24 @@
   top: 0;
   z-index: 1;
 }
+.active-link {
+  background-color: #e0f7fa;
+  font-weight: 600;
+  border-left: 4px solid #00796b;
+  color: #00796b;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center; 
+}
+
+.menu-item mat-icon {
+  margin-right: 8px; 
+  vertical-align: middle; 
+}
+
+.menu-item-text {
+  display: inline-block;
+  vertical-align: middle; 
+}

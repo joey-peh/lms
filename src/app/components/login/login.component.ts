@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { LoginUserInformation } from '../../models/user';
 
 @Component({
   selector: 'app-login',
@@ -12,15 +13,16 @@ export class LoginComponent {
   password = '';
   error = '';
 
-  users = {
-    instructor: { username: 'instructor', password: 'test123', role: 'instructor' },
-    admin: { username: 'admin', password: 'admin123', role: 'admin' }
-  };
+  users: LoginUserInformation[] = [
+    { username: 'instructor', password: 'test123', role: 'instructor', name: 'John' },
+    { username: 'admin', password: 'admin123', role: 'admin', name: 'Mary' }
+  ];
 
   constructor(private router: Router) { }
 
   login() {
-    const user = this.users[this.username as keyof typeof this.users];
+    const user = this.users.find(u => u.username === this.username);
+    
     if (user && user.password === this.password) {
       localStorage.setItem('user', JSON.stringify(user));
       this.router.navigate(['/home']);

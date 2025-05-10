@@ -16,7 +16,7 @@ export class CsvDataService {
     return forkJoin({
       courses: this.loadCourses(),
       users: this.loadUsers(),
-      enrollments: this.loadEnrollments()
+      enrollments: this.loadEnrollments(),
     });
   }
 
