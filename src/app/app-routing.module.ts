@@ -11,6 +11,11 @@ import { CourseComponent } from './components/course/course.component';
 const routes: Routes = [
   {
     path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
+  },
+  {
+    path: '',
     component: NavComponent,
     children: [
       {

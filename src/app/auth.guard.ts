@@ -10,6 +10,7 @@ export class AuthGuard implements CanActivate {
 
   canActivate(): boolean {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
+    console.log("checking user role:", user);
 
     if (user) {
       if (user.role === 'instructor' || user.role === 'admin') {
