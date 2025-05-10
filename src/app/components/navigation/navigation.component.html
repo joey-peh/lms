@@ -1,6 +1,7 @@
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav #drawer class="sidenav" fixedInViewport [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="(isHandset$ | async) === false">
+    <!-- <mat-icon class="avatar-icon">person</mat-icon> -->
     <mat-toolbar>Welcome {{userName}}</mat-toolbar>
     <mat-nav-list>
       <a
@@ -14,6 +15,10 @@
         <mat-icon mat-list-icon>{{ item.icon }}</mat-icon>
         <span mat-line class="menu-item-text">{{ item.label | titlecase }}</span>
       </a>
+      <button mat-list-item (click)="signOut()" class="menu-item sign-out-btn">
+        <mat-icon mat-list-icon>exit_to_app</mat-icon>
+        <span mat-line class="menu-item-text">Sign Out</span>
+      </button>
     </mat-nav-list>
   </mat-sidenav>
   <mat-sidenav-content>

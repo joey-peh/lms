@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { ChartOptions, ChartType, ChartDataset } from 'chart.js';
-import { HttpClient } from '@angular/common/http';
+import { ChartOptions, ChartType, ChartDataset, Chart } from 'chart.js';
 import { Course } from '../../models/course';
 import { CsvDataService } from '../../service/csv-data-service.service';
 import { Enrollment } from '../../models/enrollment';
 import { User } from '../../models/user';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
+Chart.register(ChartDataLabels);
 @Component({
   selector: 'app-enrolment-chart',
   standalone: false,
@@ -16,6 +17,17 @@ export class EnrolmentChartComponent {
   private csvDataService = inject(CsvDataService);
   barChartOptions: ChartOptions = {
     responsive: true,
+    plugins: {
+      datalabels: {
+        anchor: 'end',
+        align: 'top',
+        color: '##3f51b5',
+        font: {
+          weight: 'bold'
+        },
+        formatter: (value) => value
+      }
+    }
   };
 
   barChartLabels: string[] = [];

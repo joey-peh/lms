@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-nav',
@@ -10,7 +11,8 @@ import { map, shareReplay } from 'rxjs/operators';
   standalone: false
 })
 export class NavComponent implements OnInit {
-
+  private router = inject(Router);
+  
   userName: string = "";
   userRole: string = "";
   filteredMenuItems: { label: string, icon: string, link: string, roles: string[] }[] = [];
@@ -31,9 +33,14 @@ export class NavComponent implements OnInit {
     );
   }
 
+  signOut(): void {
+    localStorage.clear();
+    this.router.navigate(['/login']); // Redirect to the login page
+  }
+
   menuItems = [
     { label: 'home',  link: 'home', icon: 'home', roles: ['admin', 'instructor'] },
-    { label: 'courses',  link: 'course', icon: 'school', roles: ['instructor', 'admin'] },
+    { label: 'courses',  link: 'courses', icon: 'school', roles: ['instructor', 'admin'] },
     { label: 'users',  link: 'user', icon: 'group', roles: ['admin'] },
     { label: 'settings',  link: '', icon: 'settings', roles: ['admin'] },
   ];

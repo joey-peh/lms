@@ -4,6 +4,7 @@ import { forkJoin, map, Observable } from 'rxjs';
 import { Course } from '../models/course';
 import { Enrollment } from '../models/enrollment';
 import { User } from '../models/user';
+import { Topics } from '../models/topics';
 
 @Injectable({
   providedIn: 'root'
@@ -11,12 +12,13 @@ import { User } from '../models/user';
 export class CsvDataService {
 
   constructor(private http: HttpClient) { }
-  
-  loadAllData(): Observable<{ courses: Course[], users: User[], enrollments: Enrollment[] }> {
+
+  loadAllData(): Observable<{ courses: Course[], users: User[], enrollments: Enrollment[], topics: Topics[] }> {
     return forkJoin({
       courses: this.loadCourses(),
       users: this.loadUsers(),
       enrollments: this.loadEnrollments(),
+      topics: this.loadTopics()
     });
   }
 
@@ -75,12 +77,36 @@ export class CsvDataService {
     );
   }
 
+  private loadTopics(): Observable<Topics[]> {
+    return this.http.get('./assets/topics.csv', { responseType: 'text' }).pipe(
+      map(data => {
+        const lines = data.trim().split('\n').slice(1);
+        return lines
+          .filter(line => line.trim())
+          .map(line => {
+            const [topic_id, topic_title, topic_content, 
+              topic_created_at, topic_deleted_at, topic_state, 
+              course_id, topic_posted_by_user_id] = line.split(',').map(v => v.trim());
+            return {
+              topic_id: +topic_id,
+              topic_title: topic_title,
+              topic_content: topic_content,
+              topic_created_at: topic_created_at,
+              topic_deleted_at: topic_deleted_at,
+              topic_state: topic_state as 'active' | 'inactive',
+              course_id: +course_id,
+              topic_posted_by_user_id: +topic_posted_by_user_id
+            } as Topics;
+          });
+      })
+    );
+  }
   private parseDate(dateStr: string): Date {
     return null as any;
-    console.log("dateStr"+dateStr);
+    console.log("dateStr" + dateStr);
     if (!dateStr) return null as any;
     const [day, month, rest] = dateStr.split('/');
-    console.log("rest"+rest);
+    console.log("rest" + rest);
     const [year, time] = rest.split(' ');
     return new Date(`${year}-${month}-${day}T${time}`);
   }

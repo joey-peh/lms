@@ -1,13 +1,12 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, CanActivateFn, Router } from '@angular/router';
+import { inject, Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthGuard implements CanActivate {
-
-  constructor(private router: Router) {}
-
+  private router = inject(Router);
+  
   canActivate(): boolean {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     console.log("checking user role:", user);

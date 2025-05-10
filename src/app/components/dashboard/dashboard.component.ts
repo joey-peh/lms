@@ -37,10 +37,11 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.csvDataService.loadAllData().subscribe({
-      next: ({ courses, users, enrollments }) => {
+      next: ({ courses, users, enrollments, topics }) => {
         const stats = [
           { title: 'Total Courses', value: courses.length, icon: "school", link: "/course" },
-          { title: 'Total Students', value: users.length, icon: "group", link: "/user" }
+          { title: 'Total Students', value: users.length, icon: "group", link: "/user" },
+          { title: 'Total Topics', value: topics.length, icon: "forum", link: ""}
         ];
 
         this.miniCardData = stats.map(stat => ({
