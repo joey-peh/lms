@@ -6,13 +6,13 @@ import { NavComponent } from './components/navigation/navigation.component';
 import { LocationStrategy, HashLocationStrategy } from '@angular/common';
 import { AuthGuard } from './auth.guard';
 import { UserComponent } from './components/user/user.component';
-import { CourseComponent } from './components/course/course.component';
+import { DiscussionsComponent } from './components/discussions/discussions.component';
 
 const routes: Routes = [
   {
     path: '',
     redirectTo: 'login',
-    pathMatch: 'full'
+    pathMatch: 'full',
   },
   {
     path: '',
@@ -22,27 +22,26 @@ const routes: Routes = [
         path: 'home',
         component: DashboardComponent,
         canActivate: [AuthGuard],
-      },      
+      },
       {
         path: 'users',
         component: UserComponent,
         canActivate: [AuthGuard],
       },
       {
-        path: 'courses',
-        component: CourseComponent,
+        path: 'discussions',
+        component: DiscussionsComponent,
         canActivate: [AuthGuard],
-      }
-    ]
+      },
+    ],
   },
   { path: 'login', component: LoginComponent },
-  { path: '**', redirectTo: 'login' }
+  { path: '**', redirectTo: 'login' },
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes, { useHash: true })],
   exports: [RouterModule],
-  providers: [
-    { provide: LocationStrategy, useClass: HashLocationStrategy }]
+  providers: [{ provide: LocationStrategy, useClass: HashLocationStrategy }],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

@@ -1,0 +1,40 @@
+.grid-container {
+  margin: 20px;
+}
+
+/* Table styles */
+th {
+  font-weight: bold;
+}
+.mat-mdc-row .mat-mdc-cell {
+  border-bottom: 1px solid transparent;
+  border-top: 1px solid transparent;
+  cursor: pointer;
+}
+.mat-mdc-row:hover .mat-mdc-cell {
+  border-color: currentColor;
+}
+
+mat-table {
+  margin: 15px 0px;
+}
+
+mat-card-title {
+  color: var(--mat-sidenav-content-text-color, var(--mat-sys-on-background));
+  font-family: var(--mat-card-title-text-font, var(--mat-sys-title-large-font));
+  line-height: var(
+    --mat-card-title-text-line-height,
+    var(--mat-sys-title-large-line-height)
+  );
+  font-size: var(--mat-card-title-text-size, var(--mat-sys-title-large-size));
+  letter-spacing: var(
+    --mat-card-title-text-tracking,
+    var(--mat-sys-title-large-tracking)
+  );
+  font-weight: var(
+    --mat-card-title-text-weight,
+    var(--mat-sys-title-large-weight)
+  );
+  display: block;
+  margin: 0;
+}

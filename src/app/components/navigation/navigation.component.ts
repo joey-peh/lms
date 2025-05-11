@@ -39,9 +39,9 @@ export class NavComponent implements OnInit {
   }
 
   menuItems = [
+    { label: 'Discussions',  link: 'discussions', icon: 'forum', roles: ['admin', 'instructor'] },
     { label: 'Dashboard',  link: 'home', icon: 'home', roles: ['admin', 'instructor'] },
     // { label: 'courses',  link: 'courses', icon: 'school', roles: ['instructor', 'admin'] },
-    { label: 'Users',  link: 'users', icon: 'group', roles: ['admin'] },
     // { label: 'settings',  link: '', icon: 'settings', roles: ['admin'] },
   ];
 

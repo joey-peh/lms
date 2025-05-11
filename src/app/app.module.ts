@@ -20,11 +20,11 @@ import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { MiniCardComponent } from './components/mini-card/mini-card.component';
 import { UserComponent } from './components/user/user.component';
-import { CourseComponent } from './components/course/course.component';
 import { CommonChartComponent } from './components/common-chart/common-chart.component';
 import { MatTableModule } from '@angular/material/table';
 import { DatePipe } from '@angular/common';
 import { DiscussionsComponent } from './components/discussions/discussions.component';
+import { MatPaginatorModule } from '@angular/material/paginator';
 
 @NgModule({
   declarations: [
@@ -35,7 +35,6 @@ import { DiscussionsComponent } from './components/discussions/discussions.compo
     CardComponent,
     MiniCardComponent,
     UserComponent,
-    CourseComponent,
     CommonChartComponent,
     DiscussionsComponent
   ],
@@ -52,7 +51,8 @@ import { DiscussionsComponent } from './components/discussions/discussions.compo
     MatCardModule,
     MatMenuModule,
     BaseChartDirective,
-    MatTableModule
+    MatTableModule,
+    MatPaginatorModule
   ],
   providers: [provideCharts(withDefaultRegisterables()), provideHttpClient(withFetch()), DatePipe],
   bootstrap: [AppComponent]

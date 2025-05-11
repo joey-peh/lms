@@ -4,19 +4,16 @@ import { Course } from '../models/course';
 import { Enrollment } from '../models/enrollment';
 import { Topic } from '../models/topic';
 import { User } from '../models/user';
-import { CsvDataService } from './csv-data-service.service';
+import { CsvDataService, LmsState } from './csv-data-service.service';
+import { Entries } from '../models/entries';
 
-interface AppState {
-  courses: Course[];
-  users: User[];
-  enrollments: Enrollment[];
-  topics: Topic[];
+export interface AppState extends LmsState {
   loading: boolean;
   error: string | null;
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CsvDataStoreService {
   private initialState: AppState = {
@@ -24,14 +21,15 @@ export class CsvDataStoreService {
     users: [],
     enrollments: [],
     topics: [],
+    entries: [],
     loading: false,
-    error: null
+    error: null,
   };
 
   private stateSubject = new BehaviorSubject<AppState>(this.initialState);
   private state$ = this.stateSubject.asObservable();
 
-  constructor(private csvDataService: CsvDataService) { }
+  constructor(private csvDataService: CsvDataService) {}
 
   // Get the entire state
   getState(): Observable<AppState> {
@@ -40,27 +38,31 @@ export class CsvDataStoreService {
 
   // Get specific parts of the state
   getCourses(): Observable<Course[]> {
-    return this.state$.pipe(map(state => state.courses));
+    return this.state$.pipe(map((state) => state.courses));
   }
 
   getUsers(): Observable<User[]> {
-    return this.state$.pipe(map(state => state.users));
+    return this.state$.pipe(map((state) => state.users));
   }
 
   getEnrollments(): Observable<Enrollment[]> {
-    return this.state$.pipe(map(state => state.enrollments));
+    return this.state$.pipe(map((state) => state.enrollments));
   }
 
   getTopics(): Observable<Topic[]> {
-    return this.state$.pipe(map(state => state.topics));
+    return this.state$.pipe(map((state) => state.topics));
+  }
+
+  getEntries(): Observable<Entries[]> {
+    return this.state$.pipe(map((state) => state.entries));
   }
 
   getLoading(): Observable<boolean> {
-    return this.state$.pipe(map(state => state.loading));
+    return this.state$.pipe(map((state) => state.loading));
   }
 
   getError(): Observable<string | null> {
-    return this.state$.pipe(map(state => state.error));
+    return this.state$.pipe(map((state) => state.error));
   }
 
   // Load all data and update state
@@ -72,15 +74,15 @@ export class CsvDataStoreService {
         this.updateState({
           ...data,
           loading: false,
-          error: null
+          error: null,
         });
       },
       error: (err) => {
         this.updateState({
           loading: false,
-          error: 'Failed to load data: ' + err.message
+          error: 'Failed to load data: ' + err.message,
         });
-      }
+      },
     });
   }
 
@@ -88,7 +90,7 @@ export class CsvDataStoreService {
   private updateState(newState: Partial<AppState>): void {
     this.stateSubject.next({
       ...this.stateSubject.value,
-      ...newState
+      ...newState,
     });
   }
 
