@@ -39,8 +39,8 @@ export class DashboardComponent implements OnInit {
     this.csvDataService.loadAllData().subscribe({
       next: ({ courses, users, enrollments, topics }) => {
         const stats = [
-          { title: 'Total Courses', value: courses.length, icon: "school", link: "/course" },
-          { title: 'Total Students', value: users.length, icon: "group", link: "/user" },
+          { title: 'Total Courses', value: courses.length, icon: "school", link: "/courses" },
+          { title: 'Total Students', value: users.length, icon: "group", link: "/users" },
           { title: 'Total Topics', value: topics.length, icon: "forum", link: ""}
         ];
 

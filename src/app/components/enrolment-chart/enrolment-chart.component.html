@@ -1,7 +1,10 @@
-<canvas
+<div class="parent">
+  <canvas
   baseChart
   [data]="{ labels: barChartLabels, datasets: barChartData }"
   [type]="barChartType"
   [options]="barChartOptions"
   [legend]="barChartLegend"
+  class="children"
 ></canvas>
+</div>

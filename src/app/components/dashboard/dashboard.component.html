@@ -15,7 +15,7 @@
         <!-- </div>
     </mat-grid-tile> -->
 
-    <mat-grid-tile [colspan]="( cardLayout | async )?.table?.cols" [rowspan]="( cardLayout | async )?.table?.rows">
+    <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.table?.cols" [rowspan]="( cardLayout | async )?.table?.rows">
       <app-card title="Enrollments">
         <div>Number of enrollments in each course</div>
         <app-enrolment-chart></app-enrolment-chart>
