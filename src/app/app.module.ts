@@ -22,6 +22,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { MiniCardComponent } from './components/mini-card/mini-card.component';
 import { UserComponent } from './components/user/user.component';
 import { CourseComponent } from './components/course/course.component';
+import { CommonChartComponent } from './components/common-chart/common-chart.component';
 
 
 @NgModule({
@@ -34,7 +35,8 @@ import { CourseComponent } from './components/course/course.component';
     EnrolmentChartComponent,
     MiniCardComponent,
     UserComponent,
-    CourseComponent
+    CourseComponent,
+    CommonChartComponent
   ],
   imports: [
     BrowserModule,

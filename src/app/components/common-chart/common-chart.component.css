@@ -1,0 +1,22 @@
+.parent {
+    display: flex;            /* or grid, depending on your layout */
+    flex-direction: column;   /* or row, as needed */
+    height: 18vh;             /* or a fixed height like 300px */
+    width: 100%;              /* or fixed width */
+    overflow: hidden;         /* prevents children from spilling out */
+    position: relative;       /* if you need absolute children inside */
+  }
+  
+  .child {
+    flex: 1 1 auto;           /* allows children to grow/shrink to fill */
+    max-width: 100%;
+    max-height: 100%;
+    overflow: auto;           /* enables scrolling if needed */
+    box-sizing: border-box;   /* includes padding/border in sizing */
+  }
+
+  canvas.child {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }

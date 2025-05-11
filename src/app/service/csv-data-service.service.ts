@@ -4,7 +4,7 @@ import { forkJoin, map, Observable } from 'rxjs';
 import { Course } from '../models/course';
 import { Enrollment } from '../models/enrollment';
 import { User } from '../models/user';
-import { Topics } from '../models/topics';
+import { Topic } from '../models/topic';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,7 @@ export class CsvDataService {
 
   constructor(private http: HttpClient) { }
 
-  loadAllData(): Observable<{ courses: Course[], users: User[], enrollments: Enrollment[], topics: Topics[] }> {
+  loadAllData(): Observable<{ courses: Course[], users: User[], enrollments: Enrollment[], topics: Topic[] }> {
     return forkJoin({
       courses: this.loadCourses(),
       users: this.loadUsers(),
@@ -77,7 +77,7 @@ export class CsvDataService {
     );
   }
 
-  private loadTopics(): Observable<Topics[]> {
+  private loadTopics(): Observable<Topic[]> {
     return this.http.get('./assets/topics.csv', { responseType: 'text' }).pipe(
       map(data => {
         const lines = data.trim().split('\n').slice(1);
@@ -96,7 +96,7 @@ export class CsvDataService {
               topic_state: topic_state as 'active' | 'inactive',
               course_id: +course_id,
               topic_posted_by_user_id: +topic_posted_by_user_id
-            } as Topics;
+            } as Topic;
           });
       })
     );

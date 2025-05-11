@@ -19,7 +19,7 @@
     <mat-grid-tile *ngFor="let topicStat of topicData" [colspan]="( cardLayout | async )?.midCard?.cols"
       [rowspan]="( cardLayout | async )?.midCard?.rows">
       <app-card [title]="topicStat.title">
-        <div>Chart Content Here</div>
+        <app-common-chart [barChartLabels]="topicStat.barChartLabels" [barChartData]="topicStat.barChartData" [barChartType]="topicStat.barChartType" [barChartLegend]="topicStat.barChartLegend"></app-common-chart>
       </app-card>
     </mat-grid-tile>
     </div>
@@ -32,5 +32,14 @@
         </app-card>
       </mat-grid-tile>
     </div>
+
+    <div *ngIf="show.students">
+      <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.largeCard?.cols"
+        [rowspan]="( cardLayout | async )?.largeCard?.rows">
+        <app-card title="Student content here">
+        </app-card>
+      </mat-grid-tile>
+    </div>
   </mat-grid-list>
+
 </div>
