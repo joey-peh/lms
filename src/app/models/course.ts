@@ -3,5 +3,5 @@ export interface Course {
     semester: string;
     course_code: string;
     course_name: string;
-    course_created_at: Date;
+    course_created_at: string;
 }

@@ -5,13 +5,14 @@ import { Course } from '../models/course';
 import { Enrollment } from '../models/enrollment';
 import { User } from '../models/user';
 import { Topic } from '../models/topic';
+import { DatePipe } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CsvDataService {
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private datePipe: DatePipe) { }
 
   loadAllData(): Observable<{ courses: Course[], users: User[], enrollments: Enrollment[], topics: Topic[] }> {
     return forkJoin({
@@ -84,15 +85,15 @@ export class CsvDataService {
         return lines
           .filter(line => line.trim())
           .map(line => {
-            const [topic_id, topic_title, topic_content, 
-              topic_created_at, topic_deleted_at, topic_state, 
+            const [topic_id, topic_title, topic_content,
+              topic_created_at, topic_deleted_at, topic_state,
               course_id, topic_posted_by_user_id] = line.split(',').map(v => v.trim());
             return {
               topic_id: +topic_id,
               topic_title: topic_title,
               topic_content: topic_content,
-              topic_created_at: topic_created_at,
-              topic_deleted_at: topic_deleted_at,
+              topic_created_at: this.parseDate(topic_created_at),
+              topic_deleted_at: this.parseDate(topic_deleted_at),
               topic_state: topic_state as 'active' | 'inactive',
               course_id: +course_id,
               topic_posted_by_user_id: +topic_posted_by_user_id
@@ -101,13 +102,26 @@ export class CsvDataService {
       })
     );
   }
-  private parseDate(dateStr: string): Date {
-    return null as any;
-    console.log("dateStr" + dateStr);
-    if (!dateStr) return null as any;
-    const [day, month, rest] = dateStr.split('/');
-    console.log("rest" + rest);
-    const [year, time] = rest.split(' ');
-    return new Date(`${year}-${month}-${day}T${time}`);
+
+  private parseDate(dateStr: string | null | undefined): string | null {
+    if (!dateStr) {
+      return 'N/A';
+    }
+    try {
+      // Parse the date string (e.g., "2024-03-07 05:31:47")
+      const isoDateStr = dateStr.replace(' ', 'T');
+      const parsedDate = new Date(isoDateStr);
+
+      // Check if the parsed date is valid
+      if (isNaN(parsedDate.getTime())) {
+        return 'N/A';
+      }
+
+      // Format the date using DatePipe
+      return this.datePipe.transform(parsedDate, 'dd/MM/yyyy, hh:mm:ss a') || 'N/A';
+    } catch (error) {
+      console.error(`Failed to parse date: ${dateStr}`, error);
+      return 'N/A';
+    }
   }
 }

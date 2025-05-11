@@ -23,6 +23,8 @@ import { UserComponent } from './components/user/user.component';
 import { CourseComponent } from './components/course/course.component';
 import { CommonChartComponent } from './components/common-chart/common-chart.component';
 import { MatTableModule } from '@angular/material/table';
+import { DatePipe } from '@angular/common';
+import { DiscussionsComponent } from './components/discussions/discussions.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +36,8 @@ import { MatTableModule } from '@angular/material/table';
     MiniCardComponent,
     UserComponent,
     CourseComponent,
-    CommonChartComponent
+    CommonChartComponent,
+    DiscussionsComponent
   ],
   imports: [
     BrowserModule,
@@ -51,7 +54,7 @@ import { MatTableModule } from '@angular/material/table';
     BaseChartDirective,
     MatTableModule
   ],
-  providers: [provideCharts(withDefaultRegisterables()), provideHttpClient(withFetch())],
+  providers: [provideCharts(withDefaultRegisterables()), provideHttpClient(withFetch()), DatePipe],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

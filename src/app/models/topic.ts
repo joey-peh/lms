@@ -10,6 +10,8 @@ export interface Topic {topic_id: number;
 
 export interface ColumnConfig {
   columnDef: string;
-  header: string;
-  cell: (element: Topic) => string | number;
+  displayName: string;
+  cell: (element: any) => any;
+  sortable: boolean;
+  filterable: boolean;
 }

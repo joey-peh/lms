@@ -1,64 +1,111 @@
 <div class="grid-container">
   <mat-card-title>Dashboard</mat-card-title>
-  <mat-card-subtitle>Click on the mini cards for more information</mat-card-subtitle>
-  <mat-grid-list cols="{{ ( cardLayout | async )?.columns }}" rowHeight="200px">
-
+  <mat-card-subtitle
+    >Click on the mini cards for more information</mat-card-subtitle
+  >
+  <mat-grid-list cols="{{ (cardLayout | async)?.columns }}" rowHeight="200px">
     <!-- <mat-grid-tile *ngFor="let i of [1, 2, 3, 4]" [colspan]="( cardLayout | async )?.miniCard?.cols"
       [rowspan]="( cardLayout | async )?.miniCard?.rows">
       <app-card title="Card {{i}}">
         <div> -->
-    <mat-grid-tile *ngFor="let mc of miniCardData" [colspan]="( cardLayout | async )?.miniCard?.cols"
-      [rowspan]="( cardLayout | async )?.miniCard?.rows">
+    <mat-grid-tile
+      *ngFor="let mc of miniCardData$ | async"
+      [colspan]="(cardLayout | async)?.miniCard?.cols"
+      [rowspan]="(cardLayout | async)?.miniCard?.rows"
+    >
       <app-card [clickable]="true" (click)="mc.link()">
-        <app-mini-card [title]="mc.title" [textValue]="mc.textValue" [icon]="mc.icon"></app-mini-card>
+        <app-mini-card
+          [title]="mc.title"
+          [textValue]="mc.textValue"
+          [icon]="mc.icon"
+        ></app-mini-card>
       </app-card>
     </mat-grid-tile>
     <!-- </div>
     </mat-grid-tile> -->
 
     <div *ngIf="show.topics">
-      <mat-grid-tile *ngFor="let topicStat of topicData" [colspan]="( cardLayout | async )?.midCard?.cols"
-        [rowspan]="( cardLayout | async )?.midCard?.rows">
+      <mat-grid-tile
+        *ngFor="let topicStat of topicData$ | async"
+        [colspan]="(cardLayout | async)?.midCard?.cols"
+        [rowspan]="(cardLayout | async)?.midCard?.rows"
+      >
         <app-card [title]="topicStat.title">
-          <app-common-chart [height]="topicStat.height" [barChartLabels]="topicStat.barChartLabels"
-            [barChartData]="topicStat.barChartData" [barChartType]="topicStat.barChartType"
-            [barChartLegend]="topicStat.barChartLegend" [maxValue]="topicStat.maxValue"></app-common-chart>
+          <app-common-chart
+            [height]="topicStat.height"
+            [barChartLabels]="topicStat.barChartLabels"
+            [barChartData]="topicStat.barChartData"
+            [barChartType]="topicStat.barChartType"
+            [barChartLegend]="topicStat.barChartLegend"
+            [maxValue]="topicStat.maxValue"
+          ></app-common-chart>
         </app-card>
       </mat-grid-tile>
 
-      <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.largeCard?.cols"
-        [rowspan]="( cardLayout | async )?.largeCard?.rows">
-          <app-card title="Discussion">
-            <mat-table [dataSource]="discussionData.dataSource">
-              <ng-container *ngFor="let column of columnConfigs" [matColumnDef]="column.columnDef">
-                <th mat-header-cell *matHeaderCellDef>{{ column.header }}</th>
-                <td mat-cell *matCellDef="let element">{{ column.cell(element) }}</td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="discussionData.displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: discussionData.displayedColumns;"></tr>
-            </mat-table>
-          </app-card>
+      <mat-grid-tile
+        *ngFor="let i of [1]"
+        [colspan]="(cardLayout | async)?.largeCard?.cols"
+        [rowspan]="(cardLayout | async)?.largeCard?.rows"
+      >
+        <app-card title="Discussion">
+          <mat-table [dataSource]="discussionData.dataSource">
+            <ng-container
+              *ngFor="let column of discussionData.columnConfigs"
+              [matColumnDef]="column.columnDef"
+            >
+              <th mat-header-cell *matHeaderCellDef>
+                {{ column.displayName }}
+              </th>
+              <td mat-cell *matCellDef="let element">
+                {{ column.cell(element) }}
+              </td>
+            </ng-container>
+            <!-- content -->
+            <tr
+              mat-header-row
+              *matHeaderRowDef="discussionData.displayedColumns"
+            ></tr>
+            <tr
+              mat-row
+              mat-row
+              (click)="selectTopic(row)"
+              *matRowDef="let row; columns: discussionData.displayedColumns"
+            ></tr>
+          </mat-table>
+        </app-card>
       </mat-grid-tile>
     </div>
 
     <div *ngIf="show.course">
-      <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.largeCard?.cols"
-        [rowspan]="( cardLayout | async )?.largeCard?.rows">
+      <mat-grid-tile
+        *ngFor="let i of [1]"
+        [colspan]="(cardLayout | async)?.largeCard?.cols"
+        [rowspan]="(cardLayout | async)?.largeCard?.rows"
+      >
         <app-card title="Number of Enrollments by Course">
-          <app-common-chart [height]="enrollmentData.height" [barChartLabels]="enrollmentData.barChartLabels"
-            [barChartData]="enrollmentData.barChartData" [barChartType]="enrollmentData.barChartType"
-            [barChartLegend]="enrollmentData.barChartLegend" [maxValue]="enrollmentData.maxValue"></app-common-chart>
+          <app-common-chart
+            *ngIf="enrollmentData$ | async as enrollmentData"
+            [height]="enrollmentData.height"
+            [barChartLabels]="enrollmentData.barChartLabels"
+            [barChartData]="enrollmentData.barChartData"
+            [barChartType]="enrollmentData.barChartType"
+            [barChartLegend]="enrollmentData.barChartLegend"
+            [maxValue]="enrollmentData.maxValue"
+          ></app-common-chart>
         </app-card>
       </mat-grid-tile>
     </div>
 
     <div *ngIf="show.students">
-      <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.largeCard?.cols"
-        [rowspan]="( cardLayout | async )?.largeCard?.rows">
-        <app-card title="Student content here">
+      <mat-grid-tile
+        *ngFor="let i of [1]"
+        [colspan]="(cardLayout | async)?.largeCard?.cols"
+        [rowspan]="(cardLayout | async)?.largeCard?.rows"
+      >
+        <app-card title="Students">
+          <!-- <app-user [users]="userData"></app-user> -->
         </app-card>
       </mat-grid-tile>
     </div>
   </mat-grid-list>
-
 </div>

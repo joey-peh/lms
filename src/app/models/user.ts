@@ -1,8 +1,8 @@
 export interface User {
     user_id: number;
     user_name: string;
-    user_created_at: Date;
-    user_deleted_at: Date | null;
+    user_created_at: string;
+    user_deleted_at: string | null;
     user_state: 'active' | 'deleted';
 }
 

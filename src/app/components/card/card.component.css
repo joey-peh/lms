@@ -5,24 +5,18 @@
     left: 15px;
     right: 15px;
     bottom: 15px;
-    overflow: auto;
  }
- 
- 
+  
  .dashboard-card-content {
     text-align: center;
-    flex-grow: 1;
+    /* flex-grow: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; */
     align-items: center;
-    /* max-height: 100%; */
     justify-content: center;
     align-items: stretch;
- }
- 
- mat-card {
-    display: flex;
-    flex-direction: column;
+    overflow: auto;
+    padding: 30px;
  }
  
  .clickable-card {
