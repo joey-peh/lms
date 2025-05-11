@@ -40,9 +40,9 @@ export class NavComponent implements OnInit {
 
   menuItems = [
     { label: 'home',  link: 'home', icon: 'home', roles: ['admin', 'instructor'] },
-    { label: 'courses',  link: 'courses', icon: 'school', roles: ['instructor', 'admin'] },
-    { label: 'users',  link: 'users', icon: 'group', roles: ['admin'] },
-    { label: 'settings',  link: '', icon: 'settings', roles: ['admin'] },
+    // { label: 'courses',  link: 'courses', icon: 'school', roles: ['instructor', 'admin'] },
+    // { label: 'users',  link: 'users', icon: 'group', roles: ['admin'] },
+    // { label: 'settings',  link: '', icon: 'settings', roles: ['admin'] },
   ];
 
   private breakpointObserver = inject(BreakpointObserver);

@@ -6,29 +6,31 @@
       [rowspan]="( cardLayout | async )?.miniCard?.rows">
       <app-card title="Card {{i}}">
         <div> -->
-          <mat-grid-tile *ngFor="let mc of miniCardData" [colspan]="( cardLayout | async )?.miniCard?.cols"
-            [rowspan]="( cardLayout | async )?.miniCard?.rows">
-            <app-card [clickable]="true">
-            <app-mini-card [title]="mc.title" [textValue]="mc.textValue" [icon]="mc.icon" [link]="mc.link"></app-mini-card>
-          </app-card>
-          </mat-grid-tile>
-        <!-- </div>
-    </mat-grid-tile> -->
-
-    <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.table?.cols" [rowspan]="( cardLayout | async )?.table?.rows">
-      <app-card title="Enrollments">
-        <div>Number of enrollments in each course</div>
-        <app-enrolment-chart></app-enrolment-chart>
+    <mat-grid-tile *ngFor="let mc of miniCardData" [colspan]="( cardLayout | async )?.miniCard?.cols"
+      [rowspan]="( cardLayout | async )?.miniCard?.rows">
+      <app-card [clickable]="true" (click)="mc.link()">
+        <app-mini-card [title]="mc.title" [textValue]="mc.textValue" [icon]="mc.icon"></app-mini-card>
       </app-card>
     </mat-grid-tile>
+    <!-- </div>
+    </mat-grid-tile> -->
 
-    <mat-grid-tile *ngFor="let i of [5, 6, 7, 8]" [colspan]="( cardLayout | async )?.chart?.cols"
-      [rowspan]="( cardLayout | async )?.chart?.rows">
-      <app-card title="Card {{i}}">
+    <div *ngIf="show.topics">
+    <mat-grid-tile *ngFor="let topicStat of topicData" [colspan]="( cardLayout | async )?.midCard?.cols"
+      [rowspan]="( cardLayout | async )?.midCard?.rows">
+      <app-card [title]="topicStat.title">
         <div>Chart Content Here</div>
       </app-card>
     </mat-grid-tile>
+    </div>
 
-
+    <div *ngIf="show.course">
+      <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.largeCard?.cols"
+        [rowspan]="( cardLayout | async )?.largeCard?.rows">
+        <app-card title="Number of Enrollments by Course">
+          <app-enrolment-chart></app-enrolment-chart>
+        </app-card>
+      </mat-grid-tile>
+    </div>
   </mat-grid-list>
 </div>
