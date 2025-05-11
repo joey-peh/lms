@@ -17,12 +17,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { CardComponent } from './components/card/card.component';
 import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { EnrolmentChartComponent } from './components/enrolment-chart/enrolment-chart.component';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { MiniCardComponent } from './components/mini-card/mini-card.component';
 import { UserComponent } from './components/user/user.component';
 import { CourseComponent } from './components/course/course.component';
 import { CommonChartComponent } from './components/common-chart/common-chart.component';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 
 @NgModule({
@@ -32,7 +32,6 @@ import { CommonChartComponent } from './components/common-chart/common-chart.com
     DashboardComponent,
     NavComponent,
     CardComponent,
-    EnrolmentChartComponent,
     MiniCardComponent,
     UserComponent,
     CourseComponent,

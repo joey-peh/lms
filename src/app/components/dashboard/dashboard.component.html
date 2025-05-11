@@ -17,19 +17,28 @@
     </mat-grid-tile> -->
 
     <div *ngIf="show.topics">
-    <mat-grid-tile *ngFor="let topicStat of topicData" [colspan]="( cardLayout | async )?.midCard?.cols"
-      [rowspan]="( cardLayout | async )?.midCard?.rows">
-      <app-card [title]="topicStat.title">
-        <app-common-chart [height]="topicStat.height" [barChartLabels]="topicStat.barChartLabels" [barChartData]="topicStat.barChartData" [barChartType]="topicStat.barChartType" [barChartLegend]="topicStat.barChartLegend"></app-common-chart>
-      </app-card>
-    </mat-grid-tile>
+      <mat-grid-tile *ngFor="let topicStat of topicData" [colspan]="( cardLayout | async )?.midCard?.cols"
+        [rowspan]="( cardLayout | async )?.midCard?.rows">
+        <app-card [title]="topicStat.title">
+          <app-common-chart [height]="topicStat.height" [barChartLabels]="topicStat.barChartLabels"
+            [barChartData]="topicStat.barChartData" [barChartType]="topicStat.barChartType"
+            [barChartLegend]="topicStat.barChartLegend" [maxValue]="topicStat.maxValue"></app-common-chart>
+        </app-card>
+      </mat-grid-tile>
+      <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.largeCard?.cols"
+        [rowspan]="( cardLayout | async )?.largeCard?.rows">
+        <app-card title="Discussion">
+        </app-card>
+      </mat-grid-tile>
     </div>
 
     <div *ngIf="show.course">
       <mat-grid-tile *ngFor="let i of [1]" [colspan]="( cardLayout | async )?.largeCard?.cols"
         [rowspan]="( cardLayout | async )?.largeCard?.rows">
         <app-card title="Number of Enrollments by Course">
-          <app-enrolment-chart></app-enrolment-chart>
+          <app-common-chart [height]="enrollmentData.height" [barChartLabels]="enrollmentData.barChartLabels"
+            [barChartData]="enrollmentData.barChartData" [barChartType]="enrollmentData.barChartType"
+            [barChartLegend]="enrollmentData.barChartLegend" [maxValue]="enrollmentData.maxValue"></app-common-chart>
         </app-card>
       </mat-grid-tile>
     </div>

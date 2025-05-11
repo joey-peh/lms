@@ -23,6 +23,7 @@ export class DashboardComponent implements OnInit {
 
   miniCardData: MiniCard[] = [];
   topicData: CommonChart[] = [];
+  enrollmentData!: CommonChart;
   studentData: CommonChart | undefined;
 
   cardLayout = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
@@ -52,6 +53,24 @@ export class DashboardComponent implements OnInit {
       next: ({ courses, users, enrollments, topics }: { courses: Course[], users: User[], enrollments: Enrollment[], topics: Topic[] }) => {
         this.miniCardData = this.createMiniCardData(courses, users, topics);
         this.topicData = this.createTopicStats(courses, users, topics);
+
+
+        var label = courses.map(course => course.course_name);
+        var counts: number[] = [];
+        courses.forEach(course => {
+          const count = enrollments.filter(e => e.course_id === course.course_id && e.enrollment_state === 'active').length;
+          counts.push(count);
+        });
+        const barChartData = [{ data: counts, label: 'Topics' }];
+        this.enrollmentData = {
+          title: 'Number of Enrollments by Course',
+          barChartLabels: label,
+          barChartData: barChartData,
+          barChartType: 'bar',
+          barChartLegend: false,
+          height: '50vh',
+          maxValue: this.getMaxValue(barChartData)
+        };
       },
       error: (err) => console.error('Error loading data:', err)
     });
@@ -85,13 +104,15 @@ export class DashboardComponent implements OnInit {
       topics.filter(topic => topic.course_id === course.course_id && topic.topic_deleted_at === 'NA').length
     );
 
+    const barChartData = [{ data: courseCounts, label: 'Topics' }];
     return {
       title: 'Topics per Course',
       barChartLabels: perCourseLabel,
-      barChartData: [{ data: courseCounts, label: 'Topics' }],
+      barChartData: barChartData,
       barChartType: 'bar',
       barChartLegend: false,
-      height: '18vh'
+      height: '20vh',
+      maxValue: this.getMaxValue(barChartData)
     };
   }
 
@@ -109,14 +130,16 @@ export class DashboardComponent implements OnInit {
     const sortedKeys = Object.keys(topicsByMonth).sort((a, b) => a.localeCompare(b)); // Chronological sort
     const labels = sortedKeys.map(key => key);
     const data = sortedKeys.map(key => topicsByMonth[key]);
+    const barChartData = [{ data: labels.length ? data : [0], label: 'Topics Created' }];
 
     return {
       title: 'Topics Over Time',
       barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData: [{ data: labels.length ? data : [0], label: 'Topics Created' }],
+      barChartData: barChartData,
       barChartType: 'line',
       barChartLegend: false,
-      height: '18vh'
+      height: '20vh',
+      maxValue: this.getMaxValue(barChartData)
     };
   }
 
@@ -129,14 +152,16 @@ export class DashboardComponent implements OnInit {
 
     const labels = ['Active', 'Unpublished', 'Deleted'];
     const data = [stateCounts.Active, stateCounts.Unpublished, stateCounts.Deleted];
+    const barChartData = [{ data: data.filter(count => count > 0), label: 'Topics' }];
 
     return {
       title: 'Topic States Distribution',
       barChartLabels: labels,
-      barChartData: [{ data: data.filter(count => count > 0), label: 'Topics' }],
+      barChartData: barChartData,
       barChartType: 'pie',
       barChartLegend: true,
-      height: '18vh'
+      height: '20vh',
+      maxValue: this.getMaxValue(barChartData)
     };
   }
 
@@ -150,14 +175,17 @@ export class DashboardComponent implements OnInit {
     const filteredUsers = users.filter(user => topicsPerUser[user.user_id]);
     const labels = filteredUsers.map(user => user.user_name || `User ${user.user_id}`);
     const data = filteredUsers.map(user => topicsPerUser[user.user_id] || 0);
+    const barChartData = [{ data: labels.length ? data : [0], label: 'Topics' }];
 
+    console.log("this.getMaxValue(barChartData)", this.getMaxValue(barChartData));
     return {
       title: 'Topics per User',
       barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData: [{ data: labels.length ? data : [0], label: 'Topics' }],
+      barChartData: barChartData,
       barChartType: 'bar',
       barChartLegend: false,
-      height: '18vh'
+      height: '20vh',
+      maxValue: this.getMaxValue(barChartData)
     };
   }
 
@@ -168,8 +196,14 @@ export class DashboardComponent implements OnInit {
       topics: false,
       [type]: true
     };
-    console.log("toggleChart called", type, this.show);
     this.cdr.detectChanges();
+  }
+
+  private getMaxValue(barChartData: ChartDataset[]): number {
+    const data = barChartData?.flatMap(dataset =>
+      Array.isArray(dataset.data) ? dataset.data.filter((val): val is number => val != null) : [1]
+    ) ?? [1];
+    return Math.ceil(Math.max(...data) * 1.2);
   }
 
 }
@@ -188,4 +222,5 @@ interface CommonChart {
   barChartType: ChartType;
   barChartLegend: boolean;
   height: string;
+  maxValue: number;
 }
