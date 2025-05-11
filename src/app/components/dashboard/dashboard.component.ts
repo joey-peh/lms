@@ -67,7 +67,7 @@ export class DashboardComponent implements OnInit {
           barChartLabels: label,
           barChartData: barChartData,
           barChartType: 'bar',
-          barChartLegend: false,
+          barChartLegend: true,
           height: '50vh',
           maxValue: this.getMaxValue(barChartData)
         };
@@ -110,7 +110,7 @@ export class DashboardComponent implements OnInit {
       barChartLabels: perCourseLabel,
       barChartData: barChartData,
       barChartType: 'bar',
-      barChartLegend: false,
+      barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData)
     };
@@ -137,7 +137,7 @@ export class DashboardComponent implements OnInit {
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData: barChartData,
       barChartType: 'line',
-      barChartLegend: false,
+      barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData)
     };
@@ -183,7 +183,7 @@ export class DashboardComponent implements OnInit {
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData: barChartData,
       barChartType: 'bar',
-      barChartLegend: false,
+      barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData)
     };

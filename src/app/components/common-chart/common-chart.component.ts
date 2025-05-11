@@ -1,5 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ChartOptions, ChartDataset, ChartType } from 'chart.js';
+import { ChartOptions, ChartDataset, ChartType, Chart } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+Chart.register(ChartDataLabels);
 
 @Component({
   selector: 'app-common-chart',
