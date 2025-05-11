@@ -7,3 +7,9 @@ export interface Topic {topic_id: number;
     course_id: number;
     topic_posted_by_user_id: number;
 }
+
+export interface ColumnConfig {
+  columnDef: string;
+  header: string;
+  cell: (element: Topic) => string | number;
+}

@@ -22,8 +22,7 @@ import { MiniCardComponent } from './components/mini-card/mini-card.component';
 import { UserComponent } from './components/user/user.component';
 import { CourseComponent } from './components/course/course.component';
 import { CommonChartComponent } from './components/common-chart/common-chart.component';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
-
+import { MatTableModule } from '@angular/material/table';
 
 @NgModule({
   declarations: [
@@ -49,7 +48,8 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
     MatGridListModule,
     MatCardModule,
     MatMenuModule,
-    BaseChartDirective
+    BaseChartDirective,
+    MatTableModule
   ],
   providers: [provideCharts(withDefaultRegisterables()), provideHttpClient(withFetch())],
   bootstrap: [AppComponent]

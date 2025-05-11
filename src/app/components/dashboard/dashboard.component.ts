@@ -6,7 +6,7 @@ import { ChartDataset, ChartType } from 'chart.js';
 import { Course } from '../../models/course';
 import { Enrollment } from '../../models/enrollment';
 import { User } from '../../models/user';
-import { Topic } from '../../models/topic';
+import { ColumnConfig, Topic } from '../../models/topic';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,6 +25,19 @@ export class DashboardComponent implements OnInit {
   topicData: CommonChart[] = [];
   enrollmentData!: CommonChart;
   studentData: CommonChart | undefined;
+  
+  discussionData!: { dataSource: Topic[]; displayedColumns: string[] };
+  columnConfigs: ColumnConfig[] = [
+    { columnDef: 'topic_id', header: 'Topic ID', cell: (element: { topic_id: any; }) => element.topic_id },
+    { columnDef: 'topic_title', header: 'Title', cell: (element: { topic_title: any; }) => element.topic_title },
+    { columnDef: 'topic_content', header: 'Content', cell: (element: { topic_content: any; }) => element.topic_content },
+    {
+      columnDef: 'topic_created_at',
+      header: 'Created At',
+      cell: (element: { topic_created_at: string | number | Date; }) => new Date(element.topic_created_at).toLocaleString()
+    },
+    { columnDef: 'topic_state', header: 'State', cell: (element: { topic_state: any; }) => element.topic_state }
+  ];
 
   cardLayout = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
     map(({ matches }) => {
@@ -52,28 +65,37 @@ export class DashboardComponent implements OnInit {
     this.csvDataService.loadAllData().subscribe({
       next: ({ courses, users, enrollments, topics }: { courses: Course[], users: User[], enrollments: Enrollment[], topics: Topic[] }) => {
         this.miniCardData = this.createMiniCardData(courses, users, topics);
-        this.topicData = this.createTopicStats(courses, users, topics);
+        this.topicData = this.createTopicCommonChartStats(courses, users, topics);
+        this.enrollmentData = this.createEnrollmentChartStats(courses, enrollments);
 
-
-        var label = courses.map(course => course.course_name);
-        var counts: number[] = [];
-        courses.forEach(course => {
-          const count = enrollments.filter(e => e.course_id === course.course_id && e.enrollment_state === 'active').length;
-          counts.push(count);
-        });
-        const barChartData = [{ data: counts, label: 'Topics' }];
-        this.enrollmentData = {
-          title: 'Number of Enrollments by Course',
-          barChartLabels: label,
-          barChartData: barChartData,
-          barChartType: 'bar',
-          barChartLegend: true,
-          height: '50vh',
-          maxValue: this.getMaxValue(barChartData)
+        this.discussionData = {
+          dataSource: topics,
+          displayedColumns: ['topic_id', 'topic_title', 'topic_content', 'topic_created_at', 'topic_state']
         };
+
+        console.log("this.discussionData", this.discussionData);
       },
       error: (err) => console.error('Error loading data:', err)
     });
+  }
+
+  private createEnrollmentChartStats(courses: Course[], enrollments: Enrollment[]): CommonChart {
+    var label = courses.map(course => course.course_name);
+    var counts: number[] = [];
+    courses.forEach(course => {
+      const count = enrollments.filter(e => e.course_id === course.course_id && e.enrollment_state === 'active').length;
+      counts.push(count);
+    });
+    const barChartData = [{ data: counts, label: 'Topics' }];
+    return {
+      title: 'Number of Enrollments by Course',
+      barChartLabels: label,
+      barChartData: barChartData,
+      barChartType: 'bar',
+      barChartLegend: true,
+      height: '50vh',
+      maxValue: this.getMaxValue(barChartData)
+    };
   }
 
   private createMiniCardData(courses: Course[], users: User[], topics: Topic[]): MiniCard[] {
@@ -89,7 +111,7 @@ export class DashboardComponent implements OnInit {
     }));
   }
 
-  private createTopicStats(courses: Course[], users: User[], topics: Topic[]): CommonChart[] {
+  private createTopicCommonChartStats(courses: Course[], users: User[], topics: Topic[]): CommonChart[] {
     return [
       this.getTopicsPerCourse(courses, topics),
       this.getTopicsOverTime(topics),
