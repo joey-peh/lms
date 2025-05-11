@@ -1,5 +1,6 @@
 <div class="grid-container">
-  <h1 class="mat-h1">Dashboard</h1>
+  <mat-card-title>Dashboard</mat-card-title>
+  <mat-card-subtitle>Click on the mini cards for more information</mat-card-subtitle>
   <mat-grid-list cols="{{ ( cardLayout | async )?.columns }}" rowHeight="200px">
 
     <!-- <mat-grid-tile *ngFor="let i of [1, 2, 3, 4]" [colspan]="( cardLayout | async )?.miniCard?.cols"
@@ -19,7 +20,7 @@
     <mat-grid-tile *ngFor="let topicStat of topicData" [colspan]="( cardLayout | async )?.midCard?.cols"
       [rowspan]="( cardLayout | async )?.midCard?.rows">
       <app-card [title]="topicStat.title">
-        <app-common-chart [barChartLabels]="topicStat.barChartLabels" [barChartData]="topicStat.barChartData" [barChartType]="topicStat.barChartType" [barChartLegend]="topicStat.barChartLegend"></app-common-chart>
+        <app-common-chart [height]="topicStat.height" [barChartLabels]="topicStat.barChartLabels" [barChartData]="topicStat.barChartData" [barChartType]="topicStat.barChartType" [barChartLegend]="topicStat.barChartLegend"></app-common-chart>
       </app-card>
     </mat-grid-tile>
     </div>

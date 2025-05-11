@@ -36,17 +36,3 @@
   display: inline-block;
   vertical-align: middle; 
 }
-
-.avatar-icon {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background-color: #2196F3;
-  color: white;
-  font-size: 24px;
-  border: 2px solid #fff;
-  transform: scale(1.5); /* Adjust scale factor as needed */
-}

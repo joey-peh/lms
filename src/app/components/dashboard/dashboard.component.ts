@@ -22,7 +22,8 @@ export class DashboardComponent implements OnInit {
   show = { course: false, students: false, topics: false };
 
   miniCardData: MiniCard[] = [];
-  topicData: TopicCardSummary[] = [];
+  topicData: CommonChart[] = [];
+  studentData: CommonChart | undefined;
 
   cardLayout = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
     map(({ matches }) => {
@@ -69,7 +70,7 @@ export class DashboardComponent implements OnInit {
     }));
   }
 
-  private createTopicStats(courses: Course[], users: User[], topics: Topic[]): TopicCardSummary[] {
+  private createTopicStats(courses: Course[], users: User[], topics: Topic[]): CommonChart[] {
     return [
       this.getTopicsPerCourse(courses, topics),
       this.getTopicsOverTime(topics),
@@ -78,7 +79,7 @@ export class DashboardComponent implements OnInit {
     ];
   }
 
-  private getTopicsPerCourse(courses: Course[], topics: Topic[]): TopicCardSummary {
+  private getTopicsPerCourse(courses: Course[], topics: Topic[]): CommonChart {
     const perCourseLabel = courses.map(course => course.course_name);
     const courseCounts = courses.map(course =>
       topics.filter(topic => topic.course_id === course.course_id && topic.topic_deleted_at === 'NA').length
@@ -89,11 +90,12 @@ export class DashboardComponent implements OnInit {
       barChartLabels: perCourseLabel,
       barChartData: [{ data: courseCounts, label: 'Topics' }],
       barChartType: 'bar',
-      barChartLegend: false
+      barChartLegend: false,
+      height: '18vh'
     };
   }
 
-  private getTopicsOverTime(topics: Topic[]): TopicCardSummary {
+  private getTopicsOverTime(topics: Topic[]): CommonChart {
     // Group topics by month/year
     const topicsByMonth: { [key: string]: number } = {};
     topics.forEach(topic => {
@@ -113,11 +115,12 @@ export class DashboardComponent implements OnInit {
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData: [{ data: labels.length ? data : [0], label: 'Topics Created' }],
       barChartType: 'line',
-      barChartLegend: false
+      barChartLegend: false,
+      height: '18vh'
     };
   }
 
-  private getTopicStatesDistribution(topics: Topic[]): TopicCardSummary {
+  private getTopicStatesDistribution(topics: Topic[]): CommonChart {
     const stateCounts = {
       Active: topics.filter(topic => topic.topic_state === 'active').length,
       Unpublished: topics.filter(topic => topic.topic_state === 'unpublished').length,
@@ -132,11 +135,12 @@ export class DashboardComponent implements OnInit {
       barChartLabels: labels,
       barChartData: [{ data: data.filter(count => count > 0), label: 'Topics' }],
       barChartType: 'pie',
-      barChartLegend: false
+      barChartLegend: true,
+      height: '18vh'
     };
   }
 
-  private getTopicsPerUser(users: User[], topics: Topic[]): TopicCardSummary {
+  private getTopicsPerUser(users: User[], topics: Topic[]): CommonChart {
     const topicsPerUser: { [key: number]: number } = {};
     topics.forEach(topic => {
       const userId = topic.topic_posted_by_user_id;
@@ -152,7 +156,8 @@ export class DashboardComponent implements OnInit {
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData: [{ data: labels.length ? data : [0], label: 'Topics' }],
       barChartType: 'bar',
-      barChartLegend: false
+      barChartLegend: false,
+      height: '18vh'
     };
   }
 
@@ -176,10 +181,11 @@ interface MiniCard {
   link: () => void;
 }
 
-interface TopicCardSummary {
+interface CommonChart {
   title: string;
   barChartLabels: string[];
   barChartData: ChartDataset[];
   barChartType: ChartType;
   barChartLegend: boolean;
+  height: string;
 }

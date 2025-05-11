@@ -29,31 +29,5 @@ export class CommonChartComponent {
   @Input() barChartData: ChartDataset[] = [];
   @Input() barChartType: ChartType = 'bar';
   @Input() barChartLegend = true;
-
-  // courses: Course[] = [];
-  // users: User[] = [];
-  // enrollments: Enrollment[] = [];
-
-  // ngOnInit(): void {
-  //   this.csvDataService.loadAllData().subscribe(data => {
-  //     this.courses = data.courses;
-  //     this.users = data.users;
-  //     this.enrollments = data.enrollments;
-
-  //     this.barChartLabels = [];
-  //     const enrolmentCounts: number[] = [];
-
-  //     this.courses.forEach(course => {
-  //       this.barChartLabels.push(course.course_name);
-  //       const count = this.enrollments.filter(e => e.course_id === course.course_id && e.enrollment_state === 'active').length;
-  //       enrolmentCounts.push(count);
-  //     });
-
-  //     this.barChartData = [
-  //       { data: enrolmentCounts, label: 'Enrolments' }
-  //     ];
-
-  //     console.log('All data loaded:', data);
-  //   });
-// }
+  @Input() height = "30vh";
 }

@@ -1,4 +1,4 @@
-<div class="parent">
+<div class="parent" [ngStyle]="{'height': height}" >
     <canvas
     baseChart
     [data]="{ labels: barChartLabels, datasets: barChartData }"
