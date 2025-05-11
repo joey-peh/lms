@@ -1,7 +1,7 @@
 <div class="grid-container">
   <mat-card-title class="mat-mdc-card-title">Discussions</mat-card-title>
   <div>
-    <mat-table [dataSource]="discussionData.dataSource">
+    <table mat-table [dataSource]="discussionData.dataSource">
       <ng-container
         *ngFor="let column of discussionData.columnConfigs"
         [matColumnDef]="column.columnDef"
@@ -20,11 +20,10 @@
       ></tr>
       <tr
         mat-row
-        mat-row
         (click)="selectTopic(row)"
         *matRowDef="let row; columns: discussionData.displayedColumns"
       ></tr>
-    </mat-table>
+    </table>
     <mat-paginator
       [pageSizeOptions]="[10, 15, 20]"
       showFirstLastButtons

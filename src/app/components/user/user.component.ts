@@ -1,9 +1,17 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  inject,
+  Input,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { User } from '../../models/user';
 import { MatTableDataSource } from '@angular/material/table';
 import { ColumnConfig } from '../../models/topic';
 import { CsvDataService } from '../../service/csv-data-service.service';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-user',
@@ -11,8 +19,9 @@ import { CsvDataStoreService } from '../../service/csv-data-store-service.servic
   templateUrl: './user.component.html',
   styleUrl: './user.component.css',
 })
-export class UserComponent implements OnInit {
+export class UserComponent implements OnInit, AfterViewInit {
   private store = inject(CsvDataStoreService);
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   users$ = this.store.getUsers();
   userData: {
@@ -27,7 +36,6 @@ export class UserComponent implements OnInit {
 
   ngOnInit(): void {
     this.users$.subscribe((users) => {
-      console.log('this.users', users);
       this.userData.dataSource.data = users;
       const labels = Object.keys(users[0]);
       this.userData.displayedColumns = labels;
@@ -40,8 +48,13 @@ export class UserComponent implements OnInit {
           filterable: key !== 'user_created_at' && key !== 'user_deleted_at',
         });
       });
+    });
+  }
 
-      console.log('this.userData', this.userData);
+  ngAfterViewInit(): void {
+    this.userData.dataSource.paginator = this.paginator;
+    this.paginator.page.subscribe((event: PageEvent) => {
+      console.log('Page:', event.pageIndex, 'Size:', event.pageSize);
     });
   }
 

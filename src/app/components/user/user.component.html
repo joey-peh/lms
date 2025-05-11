@@ -1,17 +1,25 @@
-<mat-table [dataSource]="userData.dataSource">
-  <ng-container
-    *ngFor="let column of userData.columnConfigs"
-    [matColumnDef]="column.columnDef"
+<div>
+  <table mat-table [dataSource]="userData.dataSource">
+    <ng-container
+      *ngFor="let column of userData.columnConfigs"
+      [matColumnDef]="column.columnDef"
+    >
+      <th mat-header-cell *matHeaderCellDef>{{ column.displayName }}</th>
+      <td mat-cell *matCellDef="let element">{{ column.cell(element) }}</td>
+    </ng-container>
+    <!-- content -->
+    <tr mat-header-row *matHeaderRowDef="userData.displayedColumns"></tr>
+    <tr
+      mat-row
+      mat-row
+      (click)="selectTopic(row)"
+      *matRowDef="let row; columns: userData.displayedColumns"
+    ></tr>
+  </table>
+  <mat-paginator
+    [pageSizeOptions]="[10, 15, 20]"
+    showFirstLastButtons
+    aria-label="Select pages"
   >
-    <th mat-header-cell *matHeaderCellDef>{{ column.displayName }}</th>
-    <td mat-cell *matCellDef="let element">{{ column.cell(element) }}</td>
-  </ng-container>
-  <!-- content -->
-  <tr mat-header-row *matHeaderRowDef="userData.displayedColumns"></tr>
-  <tr
-    mat-row
-    mat-row
-    (click)="selectTopic(row)"
-    *matRowDef="let row; columns: userData.displayedColumns"
-  ></tr>
-</mat-table>
+  </mat-paginator>
+</div>

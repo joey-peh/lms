@@ -3,9 +3,15 @@
 }
 
 /* Table styles */
-th {
+table {
+  width: 100%;
+  margin: 15px 0px;
+}
+
+table th {
   font-weight: bold;
 }
+
 .mat-mdc-row .mat-mdc-cell {
   border-bottom: 1px solid transparent;
   border-top: 1px solid transparent;
@@ -13,10 +19,6 @@ th {
 }
 .mat-mdc-row:hover .mat-mdc-cell {
   border-color: currentColor;
-}
-
-mat-table {
-  margin: 15px 0px;
 }
 
 mat-card-title {
