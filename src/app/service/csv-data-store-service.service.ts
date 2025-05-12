@@ -1,15 +1,25 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, map } from 'rxjs';
+import { BehaviorSubject, Observable, map, of } from 'rxjs';
 import {
   CsvDataService,
+  EnrollmentDetails,
   LmsState,
-  TopicWithDetails,
+  TopicDetails,
+  UserDetails,
 } from './csv-data-service.service';
-import { Course, User, Enrollment, Topic, Entries } from '../models/lms-models';
+import {
+  Course,
+  User,
+  Enrollment,
+  Topic,
+  Entries,
+  LoginUserInformation,
+} from '../models/lms-models';
 
 export interface AppState extends LmsState {
   loading: boolean;
   error: string | null;
+  currentUser: LoginUserInformation | null; // Add currentUser to store the logged-in user
 }
 
 @Injectable({
@@ -24,6 +34,7 @@ export class CsvDataStoreService {
     entries: [],
     loading: false,
     error: null,
+    currentUser: null,
   };
 
   private stateSubject = new BehaviorSubject<AppState>(this.initialState);
@@ -65,11 +76,36 @@ export class CsvDataStoreService {
     return this.state$.pipe(map((state) => state.error));
   }
 
-  getTopicsWithDetails(): Observable<TopicWithDetails[]> {
+  getCurrentUser(): Observable<LoginUserInformation | null> {
+    return this.state$.pipe(map((state) => state.currentUser));
+  }
+
+  setCurrentUser(user: LoginUserInformation | null): void {
+    this.updateState({ currentUser: user });
+  }
+
+  getTopicsWithDetails(): Observable<TopicDetails[]> {
     return this.csvDataService.getTopicsWithDetails();
   }
-  
-  // Load all data and update state
+
+  getEnrollmentsWithDetails(): Observable<EnrollmentDetails[]> {
+    return this.csvDataService.getEnrollmentWithDetails();
+  }
+
+  getUserDetails(): Observable<UserDetails[]>{
+    return this.csvDataService.getUserDetails();
+  }
+
+  deleteEnrollment(userId: number): Observable<void> {
+    const currentState = this.stateSubject.getValue();
+    const updatedEnrollments = currentState.enrollments.filter(
+      (enrollment) => enrollment.user_id !== userId
+    );
+
+    this.updateState({ enrollments: updatedEnrollments });
+    return of(void 0);
+  }
+
   loadData(): void {
     this.updateState({ loading: true, error: null });
 

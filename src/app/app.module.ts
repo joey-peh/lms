@@ -30,6 +30,8 @@ import { DatePipe } from '@angular/common';
 import { DiscussionsComponent } from './components/discussions/discussions.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +43,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
     MiniCardComponent,
     UserComponent,
     CommonChartComponent,
-    DiscussionsComponent
+    DiscussionsComponent,
+    ConfirmDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -59,6 +62,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
     MatTableModule,
     MatPaginatorModule,
     MatFormFieldModule,
+    MatDialogModule
   ],
   providers: [
     provideCharts(withDefaultRegisterables()),

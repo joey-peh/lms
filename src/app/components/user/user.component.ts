@@ -1,13 +1,20 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
-  inject, OnInit,
-  ViewChild
+  inject,
+  OnInit,
+  ViewChild,
 } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { User, ColumnConfig } from '../../models/lms-models';
+import { TableDetails } from '../../models/lms-models';
+import { EnrollmentDetails } from '../../service/csv-data-service.service';
+import { Observable } from 'rxjs';
+import { CommonService } from '../../service/common-service.service';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-user',
@@ -16,34 +23,53 @@ import { User, ColumnConfig } from '../../models/lms-models';
   styleUrl: './user.component.css',
 })
 export class UserComponent implements OnInit, AfterViewInit {
+  private dialog = inject(MatDialog);
   private store = inject(CsvDataStoreService);
+  private commonService = inject(CommonService);
+  private cdr = inject(ChangeDetectorRef)
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
+  enrollmentData$!: Observable<EnrollmentDetails[]>;
   users$ = this.store.getUsers();
-  userData: {
-    dataSource: MatTableDataSource<User>;
-    columnConfigs: ColumnConfig[];
-    displayedColumns: string[];
-  } = {
-    dataSource: new MatTableDataSource<User>([]),
+  userData: TableDetails<EnrollmentDetails> = {
+    dataSource: new MatTableDataSource<EnrollmentDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
   };
 
   ngOnInit(): void {
-    this.users$.subscribe((users) => {
-      this.userData.dataSource.data = users;
-      const labels = Object.keys(users[0]);
-      this.userData.displayedColumns = labels;
-      labels.forEach((key) => {
-        this.userData.columnConfigs.push({
-          columnDef: key,
-          displayName: this.formatDisplayName(key),
-          cell: (element: User) => element[key as keyof User],
-          sortable: true,
-          filterable: key !== 'user_created_at' && key !== 'user_deleted_at',
-        });
+    this.enrollmentData$ = this.store.getEnrollmentsWithDetails();
+    this.enrollmentData$.subscribe((enrollment) => {
+      const studentEnrollment = enrollment.filter(
+        (x) => x.enrollment_type === 'student'
+      );
+      var { columnConfigs, displayedColumns } =
+        this.commonService.configureBaseColumnConfig(
+          studentEnrollment,
+          ['user', 'course'],
+          [
+            {
+              key: 'user_name',
+              displayName: 'Username',
+              selector: (enrollment) => enrollment.user.user_name,
+            },
+          ]
+        );
+
+      // Add delete button column
+      columnConfigs.push({
+        columnDef: 'action',
+        displayName: '', // No header for action column
+        cell: () => '',
+        sortable: false,
+        filterable: false,
       });
+      displayedColumns.push('action');
+
+      this.userData.dataSource.data = studentEnrollment;
+      this.userData.columnConfigs = columnConfigs;
+      this.userData.displayedColumns = displayedColumns;
     });
   }
 
@@ -56,11 +82,25 @@ export class UserComponent implements OnInit, AfterViewInit {
 
   selectTopic(row: any) {}
 
-  private formatDisplayName(key: string): string {
-    return key
-      .replace(/user_/g, '') // Remove 'user_' prefix
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' '); // Convert to title case
+  deleteEnrollment(enrollment: EnrollmentDetails) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        message: `Are you sure you want to delete ${enrollment.user.user_name}'s enrollment?`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result) {
+        this.store.deleteEnrollment(enrollment.user_id).subscribe(() => {
+          this.enrollmentData$.subscribe((enrollments) => {
+            console.log(enrollments);
+            const studentEnrollment = enrollments.filter(
+              (x) => x.enrollment_type === 'student'
+            );
+            this.userData.dataSource.data = studentEnrollment;
+          });
+        });
+      }
+    });
   }
 }

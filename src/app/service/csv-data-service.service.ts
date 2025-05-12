@@ -12,18 +12,24 @@ export interface LmsState {
   entries: Entries[];
 }
 
-export interface EnrollmentWithDetails extends Enrollment {
+export interface UserDetails extends User {
+  enrollment: Enrollment[];
+  course: Course[];
+}
+
+export interface EnrollmentDetails extends Enrollment {
   user: User;
   course: Course;
+  t: string;
 }
 
-export interface TopicWithDetails extends Topic {
+export interface TopicDetails extends Topic {
   course: Course;
   topic_by_user: User;
-  entries: EntryWithDetails[];
+  entries: EntryDetails[];
 }
 
-export interface EntryWithDetails extends Entries {
+export interface EntryDetails extends Entries {
   entry_by_user: User;
 }
 
@@ -43,7 +49,47 @@ export class CsvDataService {
     });
   }
 
-  getTopicsWithDetails(): Observable<TopicWithDetails[]> {
+  getEnrollmentWithDetails(): Observable<EnrollmentDetails[]> {
+    return this.loadAllData().pipe(
+      map((state: LmsState) => {
+        return state.enrollments.map((enrollment) => {
+          const course = state.courses.find(
+            (c) => c.course_id === enrollment.course_id
+          );
+
+          const user = state.users.find(
+            (u) => u.user_id === enrollment.user_id
+          );
+
+          return {
+            ...enrollment,
+            course,
+            user,
+          } as EnrollmentDetails;
+        });
+      })
+    );
+  }
+
+  getUserDetails(): Observable<UserDetails[]> {
+    return this.loadAllData().pipe(
+      map((state: LmsState) => {
+        return state.users.map((user) => {
+          // Find all enrollments for the user
+          const enrollments = state.enrollments.filter(
+            (c) => c.user_id === user.user_id
+          );
+
+          return {
+            ...user,
+            enrollment: enrollments, 
+          } as UserDetails;
+        });
+      })
+    );
+  }
+
+  getTopicsWithDetails(): Observable<TopicDetails[]> {
     return this.loadAllData().pipe(
       map((state: LmsState) => {
         return state.topics.map((topic) => {
@@ -67,7 +113,7 @@ export class CsvDataService {
               return {
                 ...entry,
                 entry_by_user: entryByUser,
-              } as EntryWithDetails;
+              } as EntryDetails;
             });
 
           // Build TopicWithDetails
@@ -76,12 +122,12 @@ export class CsvDataService {
             course,
             topic_by_user: topicByUser,
             entries,
-          } as TopicWithDetails;
+          } as TopicDetails;
         });
       })
     );
   }
-  
+
   loadEntries(): Observable<Entries[]> {
     return this.http.get('./assets/entries.csv', { responseType: 'text' }).pipe(
       map((data) => {
@@ -152,7 +198,7 @@ export class CsvDataService {
     );
   }
 
-  private loadEnrollments(): Observable<Enrollment[]> {
+  private loadEnrollments(): Observable<EnrollmentDetails[]> {
     return this.http
       .get('./assets/enrollment.csv', { responseType: 'text' })
       .pipe(
@@ -169,7 +215,7 @@ export class CsvDataService {
                 course_id: +course_id,
                 enrollment_type: type as 'student' | 'teacher',
                 enrollment_state: state as 'active' | 'deleted',
-              } as Enrollment;
+              } as EnrollmentDetails;
             });
         })
       );

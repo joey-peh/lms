@@ -10,18 +10,12 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { Observable } from 'rxjs';
-import { ColumnConfig } from '../../models/lms-models';
+import { ColumnConfig, TableDetails } from '../../models/lms-models';
 import {
-  EntryWithDetails,
-  TopicWithDetails,
+  EntryDetails,
+  TopicDetails,
 } from '../../service/csv-data-service.service';
 import { CommonService as CommonService } from '../../service/common-service.service';
-
-interface TableDetails<T> {
-  dataSource: MatTableDataSource<T>;
-  columnConfigs: ColumnConfig[];
-  displayedColumns: string[];
-}
 
 @Component({
   selector: 'app-discussions',
@@ -34,16 +28,16 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
   private cdr = inject(ChangeDetectorRef);
   private commonService = inject(CommonService);
 
-  topics$!: Observable<TopicWithDetails[]>;
+  topics$!: Observable<TopicDetails[]>;
 
-  discussionData: TableDetails<TopicWithDetails> = {
-    dataSource: new MatTableDataSource<TopicWithDetails>([]),
+  discussionData: TableDetails<TopicDetails> = {
+    dataSource: new MatTableDataSource<TopicDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
   };
 
-  entry: TableDetails<EntryWithDetails> = {
-    dataSource: new MatTableDataSource<EntryWithDetails>([]),
+  entry: TableDetails<EntryDetails> = {
+    dataSource: new MatTableDataSource<EntryDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
   };
@@ -61,7 +55,7 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
     });
 
     this.discussionData.dataSource.filterPredicate = (
-      data: TopicWithDetails,
+      data: TopicDetails,
       filter: string
     ): boolean => {
       const filters: { id: string; value: string }[] = JSON.parse(filter);
@@ -85,13 +79,13 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
     this.discussionData.dataSource.paginator = this.paginator;
   }
 
-  selectTopic(row: TopicWithDetails): void {
+  selectTopic(row: TopicDetails): void {
     console.log('selected row', row);
     var entries = row.entries;
     var { columnConfigs, displayedColumns } =
       this.commonService.configureBaseColumnConfig(
         entries,
-        ['entry_by_user'],
+        ['entry_by_user', 'entry_deleted_at'],
         [
           {
             key: 'user',
@@ -106,7 +100,7 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
     this.cdr.markForCheck();
   }
 
-  private configureDiscussionTable(topics: TopicWithDetails[]): void {
+  private configureDiscussionTable(topics: TopicDetails[]): void {
     var { columnConfigs, displayedColumns } =
       this.commonService.configureBaseColumnConfig(
         topics,

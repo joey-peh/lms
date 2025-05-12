@@ -1,3 +1,5 @@
+import { MatTableDataSource } from "@angular/material/table";
+
 export interface Course {
   course_id: number;
   semester: string;
@@ -56,4 +58,10 @@ export interface LoginUserInformation {
   password: string;
   role: string;
   name: string;
+}
+
+export interface TableDetails<T> {
+  dataSource: MatTableDataSource<T>;
+  columnConfigs: ColumnConfig[];
+  displayedColumns: string[];
 }

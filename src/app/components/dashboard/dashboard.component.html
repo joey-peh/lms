@@ -49,7 +49,7 @@
         [colspan]="(cardLayout | async)?.largeCard?.cols"
         [rowspan]="(cardLayout | async)?.largeCard?.rows"
       >
-        <app-card title="Number of Enrollments by Course">
+        <app-card title="Enrollment per Course">
           <app-common-chart
             *ngIf="enrollmentData$ | async as enrollmentData"
             [height]="enrollmentData.height"
@@ -69,7 +69,7 @@
         [colspan]="(cardLayout | async)?.largeCard?.cols"
         [rowspan]="(cardLayout | async)?.largeCard?.rows"
       >
-        <app-card title="Students">
+        <app-card>
           <app-user></app-user>
         </app-card>
       </mat-grid-tile>
