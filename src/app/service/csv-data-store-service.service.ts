@@ -92,17 +92,12 @@ export class CsvDataStoreService {
     return this.csvDataService.getEnrollmentWithDetails();
   }
 
-  getUserDetails(): Observable<UserDetails[]>{
+  getUserDetails(): Observable<UserDetails[]> {
     return this.csvDataService.getUserDetails();
   }
 
-  deleteEnrollment(userId: number): Observable<void> {
-    const currentState = this.stateSubject.getValue();
-    const updatedEnrollments = currentState.enrollments.filter(
-      (enrollment) => enrollment.user_id !== userId
-    );
-
-    this.updateState({ enrollments: updatedEnrollments });
+  deleteEnrollment(enrollment: EnrollmentDetails): Observable<void> {
+    this.csvDataService.deleteEnrollment(enrollment);
     return of(void 0);
   }
 

@@ -20,11 +20,11 @@ export class LoginComponent {
   users: LoginUserInformation[] = [
     {
       username: 'instructor',
-      password: 'test123',
+      password: 'i123',
       role: 'instructor',
       name: 'John',
     },
-    { username: 'admin', password: 'admin123', role: 'admin', name: 'Mary' },
+    { username: 'admin', password: 'a123', role: 'admin', name: 'Mary' },
   ];
 
   login() {

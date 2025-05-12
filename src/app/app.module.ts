@@ -44,7 +44,7 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
     UserComponent,
     CommonChartComponent,
     DiscussionsComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -62,7 +62,7 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
     MatTableModule,
     MatPaginatorModule,
     MatFormFieldModule,
-    MatDialogModule
+    MatDialogModule,
   ],
   providers: [
     provideCharts(withDefaultRegisterables()),

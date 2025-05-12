@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { forkJoin, map, Observable } from 'rxjs';
+import { BehaviorSubject, forkJoin, map, Observable } from 'rxjs';
 import { Course, Enrollment, Entries, Topic, User } from '../models/lms-models';
 import { DatePipe } from '@angular/common';
 
@@ -37,7 +37,24 @@ export interface EntryDetails extends Entries {
   providedIn: 'root',
 })
 export class CsvDataService {
-  constructor(private http: HttpClient, private datePipe: DatePipe) {}
+  // Store LmsState in a BehaviorSubject for reactive updates
+  private stateSubject = new BehaviorSubject<LmsState>({
+    courses: [],
+    users: [],
+    enrollments: [],
+    topics: [],
+    entries: [],
+  });
+
+  // Expose state as an Observable
+  state$: Observable<LmsState> = this.stateSubject.asObservable();
+
+  constructor(private http: HttpClient, private datePipe: DatePipe) {
+    // Load initial data into state
+    this.loadAllData().subscribe((state) => {
+      this.stateSubject.next(state);
+    });
+  }
 
   loadAllData(): Observable<LmsState> {
     return forkJoin({
@@ -50,17 +67,15 @@ export class CsvDataService {
   }
 
   getEnrollmentWithDetails(): Observable<EnrollmentDetails[]> {
-    return this.loadAllData().pipe(
+    return this.state$.pipe(
       map((state: LmsState) => {
         return state.enrollments.map((enrollment) => {
           const course = state.courses.find(
             (c) => c.course_id === enrollment.course_id
           );
-
           const user = state.users.find(
             (u) => u.user_id === enrollment.user_id
           );
-
           return {
             ...enrollment,
             course,
@@ -69,6 +84,19 @@ export class CsvDataService {
         });
       })
     );
+  }
+
+  deleteEnrollment(enrollment: EnrollmentDetails): void {
+    const currentState = this.stateSubject.getValue();
+    const updatedEnrollments = currentState.enrollments.map((e) =>
+      e.user_id === enrollment.user_id && e.course_id === enrollment.course_id
+        ? { ...e, enrollment_state: 'deleted' as const }
+        : e
+    );
+    this.stateSubject.next({
+      ...currentState,
+      enrollments: updatedEnrollments,
+    });
   }
 
   getUserDetails(): Observable<UserDetails[]> {
@@ -82,7 +110,7 @@ export class CsvDataService {
 
           return {
             ...user,
-            enrollment: enrollments, 
+            enrollment: enrollments,
           } as UserDetails;
         });
       })

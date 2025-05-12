@@ -15,6 +15,7 @@ import { Observable } from 'rxjs';
 import { CommonService } from '../../service/common-service.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { BaseUserComponent } from '../base/base-user.component';
 
 @Component({
   selector: 'app-user',
@@ -22,23 +23,25 @@ import { MatDialog } from '@angular/material/dialog';
   templateUrl: './user.component.html',
   styleUrl: './user.component.css',
 })
-export class UserComponent implements OnInit, AfterViewInit {
+export class UserComponent
+  extends BaseUserComponent
+  implements OnInit, AfterViewInit
+{
   private dialog = inject(MatDialog);
   private store = inject(CsvDataStoreService);
   private commonService = inject(CommonService);
-  private cdr = inject(ChangeDetectorRef)
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   enrollmentData$!: Observable<EnrollmentDetails[]>;
-  users$ = this.store.getUsers();
   userData: TableDetails<EnrollmentDetails> = {
     dataSource: new MatTableDataSource<EnrollmentDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
   };
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
     this.enrollmentData$ = this.store.getEnrollmentsWithDetails();
     this.enrollmentData$.subscribe((enrollment) => {
       const studentEnrollment = enrollment.filter(
@@ -54,19 +57,25 @@ export class UserComponent implements OnInit, AfterViewInit {
               displayName: 'Username',
               selector: (enrollment) => enrollment.user.user_name,
             },
+            {
+              key: 'course',
+              displayName: 'Course',
+              selector: (enrollment) => enrollment.course.course_name,
+            },
           ]
         );
 
       // Add delete button column
-      columnConfigs.push({
-        columnDef: 'action',
-        displayName: '', // No header for action column
-        cell: () => '',
-        sortable: false,
-        filterable: false,
-      });
-      displayedColumns.push('action');
-
+      if (this.user.role === 'admin') {
+        columnConfigs.push({
+          columnDef: 'action',
+          displayName: '', // No header for action column
+          cell: () => '',
+          sortable: false,
+          filterable: false,
+        });
+        displayedColumns.push('action');
+      }
       this.userData.dataSource.data = studentEnrollment;
       this.userData.columnConfigs = columnConfigs;
       this.userData.displayedColumns = displayedColumns;
@@ -80,8 +89,6 @@ export class UserComponent implements OnInit, AfterViewInit {
     });
   }
 
-  selectTopic(row: any) {}
-
   deleteEnrollment(enrollment: EnrollmentDetails) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
@@ -91,9 +98,9 @@ export class UserComponent implements OnInit, AfterViewInit {
 
     dialogRef.afterClosed().subscribe((result: any) => {
       if (result) {
-        this.store.deleteEnrollment(enrollment.user_id).subscribe(() => {
+        this.store.deleteEnrollment(enrollment).subscribe(() => {
+          this.enrollmentData$ = this.store.getEnrollmentsWithDetails();
           this.enrollmentData$.subscribe((enrollments) => {
-            console.log(enrollments);
             const studentEnrollment = enrollments.filter(
               (x) => x.enrollment_type === 'student'
             );

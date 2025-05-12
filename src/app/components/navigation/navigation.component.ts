@@ -3,47 +3,29 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
+import { BaseUserComponent } from '../base/base-user.component';
+
+interface MenuItem {
+  label: string;
+  icon: string;
+  link: string;
+  roles: string[];
+}
 
 @Component({
   selector: 'app-nav',
   templateUrl: './navigation.component.html',
-  styleUrl: './navigation.component.css',
+  styleUrls: ['./navigation.component.css'],
   standalone: false,
 })
-export class NavComponent implements OnInit {
-  private router = inject(Router);
-  private csvDataStore = inject(CsvDataStoreService);
 
-  userName: string = '';
-  userRole: string = '';
-  filteredMenuItems: {
-    label: string;
-    icon: string;
-    link: string;
-    roles: string[];
-  }[] = [];
+export class NavComponent extends BaseUserComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly breakpointObserver = inject(BreakpointObserver);
 
-  ngOnInit(): void {
-    this.csvDataStore.getCurrentUser().subscribe((user) => {
-      this.userName = user?.name ?? "";
-      this.userRole = user?.role ?? "";
-    });
-    this.filterMenuItems();
-  }
+  filteredMenuItems: MenuItem[] = [];
 
-  filterMenuItems() {
-    this.filteredMenuItems = this.menuItems.filter((item) =>
-      item.roles.includes(this.userRole)
-    );
-  }
-
-  signOut(): void {
-    this.csvDataStore.setCurrentUser(null);
-    this.router.navigate(['/login']);
-  }
-
-  menuItems = [
+  private readonly menuItems: MenuItem[] = [
     {
       label: 'Discussions',
       link: 'discussions',
@@ -55,15 +37,29 @@ export class NavComponent implements OnInit {
       link: 'home',
       icon: 'home',
       roles: ['admin', 'instructor'],
-    }
+    },
   ];
 
-  private breakpointObserver = inject(BreakpointObserver);
-
-  isHandset$: Observable<boolean> = this.breakpointObserver
+  readonly isHandset$: Observable<boolean> = this.breakpointObserver
     .observe(Breakpoints.Handset)
     .pipe(
       map((result) => result.matches),
-      shareReplay()
+      shareReplay(1)
     );
+
+  override ngOnInit(): void {
+    super.ngOnInit(); // Call the base class's ngOnInit to set up the user subscription
+    this.filterMenuItems(); // Filter menu items after user is set
+  }
+
+  private filterMenuItems(): void {
+    this.filteredMenuItems = this.menuItems.filter((item) =>
+      item.roles.includes(this.user.role)
+    );
+  }
+
+  signOut(): void {
+    this.csvDataStore.setCurrentUser(null);
+    this.router.navigate(['/login']);
+  }
 }

@@ -5,9 +5,8 @@ import { map } from 'rxjs/operators';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { ChartDataset, ChartType } from 'chart.js';
 import { Course, Topic, Enrollment } from '../../models/lms-models';
-import {
-  EnrollmentDetails
-} from '../../service/csv-data-service.service';
+import { EnrollmentDetails } from '../../service/csv-data-service.service';
+import { BaseUserComponent } from '../base/base-user.component';
 
 interface MiniCard {
   title: string;
@@ -33,7 +32,7 @@ interface CommonChart {
   styleUrl: './dashboard.component.css',
   standalone: false,
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent extends BaseUserComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private store = inject(CsvDataStoreService);
   private cdr = inject(ChangeDetectorRef);
@@ -58,6 +57,7 @@ export class DashboardComponent implements OnInit {
   );
 
   constructor() {
+    super();
     this.miniCardData$ = combineLatest([
       this.courses$,
       this.store.getEnrollmentsWithDetails(),
@@ -132,7 +132,8 @@ export class DashboardComponent implements OnInit {
       .pipe(map((users) => this.createStudentChartStats(users)));
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
     this.store.loadData();
   }
 
@@ -155,8 +156,11 @@ export class DashboardComponent implements OnInit {
         link: () => this.toggleChart('topics'),
       },
       {
-        title: 'Total Students',
-        value: users.filter(x => x.enrollment_type == 'student').length,
+        title: 'Total Active Students',
+        value: users.filter(
+          (x) =>
+            x.enrollment_type == 'student' && x.enrollment_state == 'active'
+        ).length,
         icon: 'group',
         link: () => this.toggleChart('students'),
       },
