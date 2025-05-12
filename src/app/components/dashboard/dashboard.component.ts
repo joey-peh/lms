@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { ChartDataset, ChartType } from 'chart.js';
 import { Course, User, Topic, Enrollment } from '../../models/lms-models';
+import { TopicWithDetails } from '../../service/csv-data-service.service';
 
 interface MiniCard {
   title: string;
@@ -15,19 +16,13 @@ interface MiniCard {
 
 interface CommonChart {
   title: string;
+  subtitle: string;
   barChartLabels: string[];
   barChartData: ChartDataset[];
   barChartType: ChartType;
   barChartLegend: boolean;
   height: string;
   maxValue: number;
-}
-
-interface CardLayout {
-  columns: number;
-  miniCard: { cols: number; rows: number };
-  midCard: { cols: number; rows: number };
-  largeCard: { cols: number; rows: number };
 }
 
 @Component({
@@ -48,6 +43,7 @@ export class DashboardComponent implements OnInit {
   loading$ = this.store.getLoading();
   error$ = this.store.getError();
 
+  topicsWithDetails$!: Observable<TopicWithDetails[]>;
   miniCardData$: Observable<MiniCard[]>;
   topicData$: Observable<CommonChart[]>;
   enrollmentData$: Observable<CommonChart>;
@@ -80,10 +76,39 @@ export class DashboardComponent implements OnInit {
       this.courses$,
       this.users$,
       this.topics$,
+      this.store.getTopicsWithDetails(),
     ]).pipe(
-      map(([courses, users, topics]) =>
-        this.createTopicCommonChartStats(courses, users, topics)
-      )
+      map(([courses, users, topics, topicsWithDetails]) => {
+        var commonChartList: CommonChart[] = [];
+
+        var data = this.getGroupCounts(topicsWithDetails, 'course_id');
+
+        const labels: string[] = Object.keys(data).map(
+          (x) =>
+            courses.find((c) => c.course_id.toString() == x)?.course_name ?? ''
+        );
+        const counts = Object.entries(data).map((x) => x[1]);
+        const barChartData: ChartDataset[] = [
+          { data: counts, label: 'Entries' },
+        ];
+
+        const barChartConfig: CommonChart = {
+          title: 'Entries per Course',
+          subtitle: "Number of entries created per course",
+          barChartLabels: labels.length ? labels : ['No Data'],
+          barChartData,
+          barChartType: 'bar',
+          barChartLegend: true,
+          height: '20vh',
+          maxValue: this.getMaxValue(barChartData),
+        };
+
+        commonChartList.push(barChartConfig);
+        const chart = this.createTopicCommonChartStats(courses, users, topics);
+        commonChartList.push(...chart);
+
+        return commonChartList;
+      })
     );
 
     this.enrollmentData$ = combineLatest([
@@ -100,8 +125,21 @@ export class DashboardComponent implements OnInit {
     );
   }
 
+  private getGroupCounts<T, K extends keyof T>(
+    array: T[],
+    key: K
+  ): { [key: string]: number } {
+    return array.reduce((result, current) => {
+      const groupValue = current[key];
+      result[groupValue as any] = (result[groupValue as any] || 0) + 1;
+      return result;
+    }, {} as { [key: string]: number });
+  }
+
   ngOnInit(): void {
     this.store.loadData();
+    this.topicsWithDetails$ = this.store.getTopicsWithDetails();
+    this.topicsWithDetails$.subscribe((topics) => {});
   }
 
   private createMiniCardData(
@@ -154,6 +192,7 @@ export class DashboardComponent implements OnInit {
     ];
     return {
       title: 'Enrollments by Course',
+      subtitle: "Number of enrollment per course",
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -179,6 +218,7 @@ export class DashboardComponent implements OnInit {
 
     return {
       title: 'User Status Distribution',
+      subtitle: "No idea",
       barChartLabels: labels,
       barChartData,
       barChartType: 'pie',
@@ -215,6 +255,7 @@ export class DashboardComponent implements OnInit {
     const barChartData: ChartDataset[] = [{ data: counts, label: 'Topics' }];
     return {
       title: 'Topics per Course',
+      subtitle: "Track number of topics created per course",
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -248,6 +289,7 @@ export class DashboardComponent implements OnInit {
 
     return {
       title: 'Topics Over Time',
+      subtitle: "Useful for getting peak of creation",
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'line',
@@ -277,6 +319,7 @@ export class DashboardComponent implements OnInit {
 
     return {
       title: 'Topic States Distribution',
+      subtitle: "Track the topic states",
       barChartLabels: labels,
       barChartData,
       barChartType: 'pie',
@@ -304,6 +347,7 @@ export class DashboardComponent implements OnInit {
 
     return {
       title: 'Topics per User',
+      subtitle: "To know who is frequent poster",
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',

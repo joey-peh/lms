@@ -10,6 +10,11 @@
         >
           <th mat-header-cell *matHeaderCellDef>
             {{ column.displayName }}
+            <input
+              matInput
+              (keyup)="applyFilter($event, column.columnDef)"
+              placeholder="Filter by"
+            />
           </th>
           <td mat-cell *matCellDef="let element">
             {{ column.cell(element) }}

@@ -15,7 +15,7 @@
     align-items: center;
     justify-content: center;
     align-items: stretch;
-    overflow: auto;
+    /* overflow: auto; */
     padding: 30px;
  }
  

@@ -30,7 +30,7 @@
         [colspan]="(cardLayout | async)?.midCard?.cols"
         [rowspan]="(cardLayout | async)?.midCard?.rows"
       >
-        <app-card [title]="topicStat.title">
+        <app-card [title]="topicStat.title" [subtitle]="topicStat.subtitle">
           <app-common-chart
             [height]="topicStat.height"
             [barChartLabels]="topicStat.barChartLabels"

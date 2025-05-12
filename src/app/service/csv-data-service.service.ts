@@ -40,13 +40,8 @@ export class CsvDataService {
       enrollments: this.loadEnrollments(),
       topics: this.loadTopics(),
       entries: this.loadEntries(),
-      // topicWithDetails: this.getTopicsWithDetails()
     });
   }
-
-  // getEnrollmentWithDetails(): Observable<EnrollmentWithDetails[]>{
-
-  // }
 
   getTopicsWithDetails(): Observable<TopicWithDetails[]> {
     return this.loadAllData().pipe(

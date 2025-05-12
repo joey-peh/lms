@@ -10,14 +10,18 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { Observable } from 'rxjs';
-import {
-  ColumnConfig
-} from '../../models/lms-models';
+import { ColumnConfig } from '../../models/lms-models';
 import {
   EntryWithDetails,
   TopicWithDetails,
 } from '../../service/csv-data-service.service';
 import { CommonService as CommonService } from '../../service/common-service.service';
+
+interface TableDetails<T> {
+  dataSource: MatTableDataSource<T>;
+  columnConfigs: ColumnConfig[];
+  displayedColumns: string[];
+}
 
 @Component({
   selector: 'app-discussions',
@@ -32,21 +36,13 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
 
   topics$!: Observable<TopicWithDetails[]>;
 
-  discussionData: {
-    dataSource: MatTableDataSource<TopicWithDetails>;
-    columnConfigs: ColumnConfig[];
-    displayedColumns: string[];
-  } = {
+  discussionData: TableDetails<TopicWithDetails> = {
     dataSource: new MatTableDataSource<TopicWithDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
   };
 
-  entry: {
-    dataSource: MatTableDataSource<EntryWithDetails>;
-    columnConfigs: ColumnConfig[];
-    displayedColumns: string[];
-  } = {
+  entry: TableDetails<EntryWithDetails> = {
     dataSource: new MatTableDataSource<EntryWithDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
@@ -114,5 +110,15 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
     this.discussionData.dataSource.data = topics;
     this.discussionData.columnConfigs = columnConfigs;
     this.discussionData.displayedColumns = displayedColumns;
+  }
+
+  applyFilter(event: Event, column: string): void {
+    const tableFilters = [];
+    const filterValue = (event.target as HTMLInputElement).value;
+    tableFilters.push({
+      id: column,
+      value: filterValue,
+    });
+    this.discussionData.dataSource.filter = JSON.stringify(tableFilters);
   }
 }
