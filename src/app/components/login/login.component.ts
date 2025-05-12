@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { LoginUserInformation } from '../../models/user';
+import { LoginUserInformation } from '../../models/lms-models';
 
 @Component({
   selector: 'app-login',

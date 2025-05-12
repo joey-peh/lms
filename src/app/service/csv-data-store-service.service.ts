@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, map } from 'rxjs';
-import { Course } from '../models/course';
-import { Enrollment } from '../models/enrollment';
-import { Topic } from '../models/topic';
-import { User } from '../models/user';
-import { CsvDataService, LmsState } from './csv-data-service.service';
-import { Entries } from '../models/entries';
+import {
+  CsvDataService,
+  LmsState,
+  TopicWithDetails,
+} from './csv-data-service.service';
+import { Course, User, Enrollment, Topic, Entries } from '../models/lms-models';
 
 export interface AppState extends LmsState {
   loading: boolean;
@@ -65,6 +65,10 @@ export class CsvDataStoreService {
     return this.state$.pipe(map((state) => state.error));
   }
 
+  getTopicsWithDetails(): Observable<TopicWithDetails[]> {
+    return this.csvDataService.getTopicsWithDetails();
+  }
+  
   // Load all data and update state
   loadData(): void {
     this.updateState({ loading: true, error: null });

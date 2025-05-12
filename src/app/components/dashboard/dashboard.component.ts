@@ -1,23 +1,10 @@
-import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  inject,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
-import { Course } from '../../models/course';
-import { Enrollment } from '../../models/enrollment';
-import { User } from '../../models/user';
-import { ColumnConfig, Topic } from '../../models/topic';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { ChartDataset, ChartType } from 'chart.js';
+import { Course, User, Topic, Enrollment } from '../../models/lms-models';
 
 interface MiniCard {
   title: string;
@@ -67,7 +54,6 @@ export class DashboardComponent implements OnInit {
   studentData$: Observable<CommonChart>;
 
   show = { course: false, students: false, topics: false };
-
 
   cardLayout = this.breakpointObserver.observe(Breakpoints.Handset).pipe(
     map(({ matches }) => ({
@@ -227,7 +213,6 @@ export class DashboardComponent implements OnInit {
     );
 
     const barChartData: ChartDataset[] = [{ data: counts, label: 'Topics' }];
-    console.log('getTopicsPerCourse counts', counts);
     return {
       title: 'Topics per Course',
       barChartLabels: labels.length ? labels : ['No Data'],

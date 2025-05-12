@@ -1,17 +1,13 @@
 import {
   AfterViewInit,
   Component,
-  inject,
-  Input,
-  OnInit,
-  ViewChild,
+  inject, OnInit,
+  ViewChild
 } from '@angular/core';
-import { User } from '../../models/user';
 import { MatTableDataSource } from '@angular/material/table';
-import { ColumnConfig } from '../../models/topic';
-import { CsvDataService } from '../../service/csv-data-service.service';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { User, ColumnConfig } from '../../models/lms-models';
 
 @Component({
   selector: 'app-user',

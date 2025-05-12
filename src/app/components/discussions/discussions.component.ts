@@ -7,19 +7,21 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { Topic, ColumnConfig } from '../../models/topic';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { combineLatest, map, Observable } from 'rxjs';
-import { Course } from '../../models/course';
-import { User } from '../../models/user';
-import { Entries } from '../../models/entries';
-
-interface ProcessedTopic extends Topic {
-  course_name: string | null;
-  user_name: string | null;
-  entries: Entries[];
-}
+import {
+  Topic,
+  Entries,
+  ColumnConfig,
+  Course,
+  User,
+} from '../../models/lms-models';
+import {
+  EntryWithDetails,
+  TopicWithDetails,
+} from '../../service/csv-data-service.service';
+import { CommonServiceService as CommonService } from '../../service/common-service.service';
 
 @Component({
   selector: 'app-discussions',
@@ -30,105 +32,60 @@ interface ProcessedTopic extends Topic {
 export class DiscussionsComponent implements OnInit, AfterViewInit {
   private store = inject(CsvDataStoreService);
   private cdr = inject(ChangeDetectorRef);
+  private commonService = inject(CommonService);
 
-  courses$ = this.store.getCourses();
-  users$ = this.store.getUsers();
-  topics$ = this.store.getTopics();
-  entries$ = this.store.getEntries();
-
-  processedData$: Observable<ProcessedTopic[]>;
+  topics$!: Observable<TopicWithDetails[]>;
 
   discussionData: {
-    dataSource: MatTableDataSource<ProcessedTopic>;
+    dataSource: MatTableDataSource<TopicWithDetails>;
     columnConfigs: ColumnConfig[];
     displayedColumns: string[];
   } = {
-    dataSource: new MatTableDataSource<ProcessedTopic>([]),
+    dataSource: new MatTableDataSource<TopicWithDetails>([]),
+    columnConfigs: [],
+    displayedColumns: [],
+  };
+
+  entry: {
+    dataSource: MatTableDataSource<EntryWithDetails>;
+    columnConfigs: ColumnConfig[];
+    displayedColumns: string[];
+  } = {
+    dataSource: new MatTableDataSource<EntryWithDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
   };
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  constructor() {
-    // Initialize processed data
-    this.processedData$ = combineLatest([
-      this.courses$,
-      this.users$,
-      this.topics$,
-      this.entries$,
-    ]).pipe(
-      map(([courses, users, topics, entries]) =>
-        this.getProcessedData(courses, users, topics, entries)
-      )
-    );
-  }
-
   ngOnInit(): void {
-    this.store.loadData();
+    this.topics$ = this.store.getTopicsWithDetails();
     // Update table with processed data
-    this.processedData$.subscribe((processedTopics) => {
-      this.discussionData.dataSource.data = processedTopics;
-      this.configureDiscussionTable(processedTopics);
+    this.topics$.subscribe((topics) => {
+      this.configureDiscussionTable(topics);
       this.cdr.markForCheck();
     });
   }
   ngAfterViewInit(): void {
     this.discussionData.dataSource.paginator = this.paginator;
-    this.paginator.page.subscribe((event: PageEvent) => {
-      console.log('Page:', event.pageIndex, 'Size:', event.pageSize);
-    });
   }
 
-  selectTopic(row: Topic): void {
-    console.log('Topic selected:', row);
+  selectTopic(row: TopicWithDetails): void {
+    console.log("selected row", row)
+    var entries = row.entries;
+    var { columnConfigs, displayedColumns } =
+      this.commonService.configureColumnConfig(entries);
+    this.entry.dataSource.data = entries;
+    this.entry.columnConfigs = columnConfigs;
+    this.entry.displayedColumns = displayedColumns;
+    this.cdr.markForCheck();
   }
 
-  getProcessedData(
-    courses: Course[],
-    users: User[],
-    topics: Topic[],
-    entries: Entries[]
-  ): any {
-    return topics.map((topic) => ({
-      ...topic,
-      course:
-        courses.find((course) => course.course_id === topic.course_id)
-          ?.course_name || null,
-      user:
-        users.find((user) => user.user_id === topic.topic_posted_by_user_id)
-          ?.user_name || null,
-      entries: entries.find((entries) => entries.topic_id === topic.topic_id),
-    }));
-  }
-
-  private configureDiscussionTable(topics: ProcessedTopic[]): void {
-    this.discussionData.columnConfigs = [];
-    this.discussionData.displayedColumns = [];
-
-    if (topics.length > 0) {
-      const labels = Object.keys(topics[0]).filter(
-        (key) => key !== 'course_id' && key !== 'topic_posted_by_user_id' && key !== 'entries'
-      ); // Exclude large content
-      this.discussionData.displayedColumns = labels;
-
-      labels.forEach((key) => {
-        this.discussionData.columnConfigs.push({
-          columnDef: key,
-          displayName: this.formatDisplayName(key),
-          cell: (element: Topic) => element[key as keyof Topic],
-          sortable: true,
-          filterable: key !== 'topic_created_at' && key !== 'topic_deleted_at',
-        });
-      });
-    }
-  }
-
-  private formatDisplayName(key: string): string {
-    return key
-      .replace(/topic_|user_/g, '')
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+  private configureDiscussionTable(topics: TopicWithDetails[]): void {
+    var { columnConfigs, displayedColumns } =
+      this.commonService.configureColumnConfig(topics);
+    this.discussionData.dataSource.data = topics;
+    this.discussionData.columnConfigs = columnConfigs;
+    this.discussionData.displayedColumns = displayedColumns;
   }
 }

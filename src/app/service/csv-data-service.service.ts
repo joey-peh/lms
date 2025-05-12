@@ -1,13 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { forkJoin, map, Observable } from 'rxjs';
-import { Course } from '../models/course';
-import { Enrollment } from '../models/enrollment';
-import { User } from '../models/user';
-import { Topic } from '../models/topic';
+import { Course, Enrollment, Entries, Topic, User } from '../models/lms-models';
 import { DatePipe } from '@angular/common';
-import { Entries } from '../models/entries';
-import { AppState } from './csv-data-store-service.service';
 
 export interface LmsState {
   courses: Course[];
@@ -15,6 +10,21 @@ export interface LmsState {
   enrollments: Enrollment[];
   topics: Topic[];
   entries: Entries[];
+}
+
+export interface EnrollmentWithDetails extends Enrollment {
+  user: User;
+  course: Course;
+}
+
+export interface TopicWithDetails extends Topic {
+  course: Course;
+  topic_by_user: User;
+  entries: EntryWithDetails[];
+}
+
+export interface EntryWithDetails extends Entries {
+  entry_by_user: User;
 }
 
 @Injectable({
@@ -30,7 +40,47 @@ export class CsvDataService {
       enrollments: this.loadEnrollments(),
       topics: this.loadTopics(),
       entries: this.loadEntries(),
+      // topicWithDetails: this.getTopicsWithDetails()
     });
+  }
+
+  getTopicsWithDetails(): Observable<TopicWithDetails[]> {
+    return this.loadAllData().pipe(
+      map((state: LmsState) => {
+        return state.topics.map((topic) => {
+          // Find the course for the topic
+          const course = state.courses.find(
+            (c) => c.course_id === topic.course_id
+          );
+
+          // Find the user who created the topic
+          const topicByUser = state.users.find(
+            (u) => u.user_id === topic.topic_posted_by_user_id
+          );
+
+          // Find all entries for this topic and enrich with entry_by_user
+          const entries = state.entries
+            .filter((entry) => entry.topic_id === topic.topic_id)
+            .map((entry) => {
+              const entryByUser = state.users.find(
+                (u) => u.user_id === entry.entry_posted_by_user_id
+              );
+              return {
+                ...entry,
+                entry_by_user: entryByUser,
+              } as EntryWithDetails;
+            });
+
+          // Build TopicWithDetails
+          return {
+            ...topic,
+            course,
+            topic_by_user: topicByUser,
+            entries,
+          } as TopicWithDetails;
+        });
+      })
+    );
   }
   
   loadEntries(): Observable<Entries[]> {
