@@ -16,7 +16,11 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { CardComponent } from './components/card/card.component';
-import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import {
+  BaseChartDirective,
+  provideCharts,
+  withDefaultRegisterables,
+} from 'ng2-charts';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { MiniCardComponent } from './components/mini-card/mini-card.component';
 import { UserComponent } from './components/user/user.component';
@@ -25,6 +29,7 @@ import { MatTableModule } from '@angular/material/table';
 import { DatePipe } from '@angular/common';
 import { DiscussionsComponent } from './components/discussions/discussions.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @NgModule({
   declarations: [
@@ -52,9 +57,14 @@ import { MatPaginatorModule } from '@angular/material/paginator';
     MatMenuModule,
     BaseChartDirective,
     MatTableModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    MatFormFieldModule,
   ],
-  providers: [provideCharts(withDefaultRegisterables()), provideHttpClient(withFetch()), DatePipe],
-  bootstrap: [AppComponent]
+  providers: [
+    provideCharts(withDefaultRegisterables()),
+    provideHttpClient(withFetch()),
+    DatePipe,
+  ],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

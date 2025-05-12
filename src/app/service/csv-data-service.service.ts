@@ -44,6 +44,10 @@ export class CsvDataService {
     });
   }
 
+  // getEnrollmentWithDetails(): Observable<EnrollmentWithDetails[]>{
+
+  // }
+
   getTopicsWithDetails(): Observable<TopicWithDetails[]> {
     return this.loadAllData().pipe(
       map((state: LmsState) => {
