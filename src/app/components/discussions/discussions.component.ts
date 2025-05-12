@@ -10,12 +10,13 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { Observable } from 'rxjs';
-import { ColumnConfig, TableDetails } from '../../models/lms-models';
+import { TableDetails } from '../../models/lms-models';
 import {
   EntryDetails,
   TopicDetails,
 } from '../../service/csv-data-service.service';
 import { CommonService as CommonService } from '../../service/common-service.service';
+import { BaseUserComponent } from '../base/base-user.component';
 
 @Component({
   selector: 'app-discussions',
@@ -23,7 +24,10 @@ import { CommonService as CommonService } from '../../service/common-service.ser
   templateUrl: './discussions.component.html',
   styleUrl: './discussions.component.css',
 })
-export class DiscussionsComponent implements OnInit, AfterViewInit {
+export class DiscussionsComponent
+  extends BaseUserComponent
+  implements OnInit, AfterViewInit
+{
   private store = inject(CsvDataStoreService);
   private cdr = inject(ChangeDetectorRef);
   private commonService = inject(CommonService);
@@ -46,11 +50,15 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
     this.topics$ = this.store.getTopicsWithDetails();
-    // Update table with processed data
+
     this.topics$.subscribe((topics) => {
-      this.configureDiscussionTable(topics);
+      var filteredTopics = topics.filter((x) =>
+        this.user.course_id.includes(x.course_id)
+      );
+      this.configureDiscussionTable(filteredTopics);
       this.cdr.markForCheck();
     });
 
@@ -80,7 +88,6 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
   }
 
   selectTopic(row: TopicDetails): void {
-    console.log('selected row', row);
     var entries = row.entries;
     var { columnConfigs, displayedColumns } =
       this.commonService.configureBaseColumnConfig(

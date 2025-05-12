@@ -53,11 +53,12 @@ export interface User {
   user_state: 'active' | 'deleted';
 }
 
-export interface LoginUserInformation {
+export interface LoginUser {
   username: string;
   password: string;
   role: string;
   name: string;
+  course_id: number[];
 }
 
 export interface TableDetails<T> {

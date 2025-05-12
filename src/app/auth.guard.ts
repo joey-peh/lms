@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import { LoginUserInformation } from './models/lms-models';
+import { LoginUser as LoginUser } from './models/lms-models';
 import { CsvDataStoreService } from './service/csv-data-store-service.service';
 import { map, Observable } from 'rxjs';
 
@@ -13,7 +13,7 @@ export class AuthGuard implements CanActivate {
 
   canActivate(): Observable<boolean> {
     return this.csvDataStore.getCurrentUser().pipe(
-      map((user: LoginUserInformation | null) => {
+      map((user: LoginUser | null) => {
         if (user) {
           if (user.role === 'instructor' || user.role === 'admin') {
             return true;

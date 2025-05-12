@@ -13,13 +13,13 @@ import {
   Enrollment,
   Topic,
   Entries,
-  LoginUserInformation,
+  LoginUser,
 } from '../models/lms-models';
 
 export interface AppState extends LmsState {
   loading: boolean;
   error: string | null;
-  currentUser: LoginUserInformation | null; // Add currentUser to store the logged-in user
+  currentUser: LoginUser | null; // Add currentUser to store the logged-in user
 }
 
 @Injectable({
@@ -76,11 +76,11 @@ export class CsvDataStoreService {
     return this.state$.pipe(map((state) => state.error));
   }
 
-  getCurrentUser(): Observable<LoginUserInformation | null> {
+  getCurrentUser(): Observable<LoginUser | null> {
     return this.state$.pipe(map((state) => state.currentUser));
   }
 
-  setCurrentUser(user: LoginUserInformation | null): void {
+  setCurrentUser(user: LoginUser | null): void {
     this.updateState({ currentUser: user });
   }
 

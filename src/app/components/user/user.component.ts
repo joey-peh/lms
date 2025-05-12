@@ -44,9 +44,7 @@ export class UserComponent
     super.ngOnInit();
     this.enrollmentData$ = this.store.getEnrollmentsWithDetails();
     this.enrollmentData$.subscribe((enrollment) => {
-      const studentEnrollment = enrollment.filter(
-        (x) => x.enrollment_type === 'student'
-      );
+      const studentEnrollment = this.getStudentEnrollment(enrollment);
       var { columnConfigs, displayedColumns } =
         this.commonService.configureBaseColumnConfig(
           studentEnrollment,
@@ -82,11 +80,24 @@ export class UserComponent
     });
   }
 
+  private getStudentEnrollment(enrollment: EnrollmentDetails[]) {
+    return this.user.role == 'admin'
+      ? enrollment.filter(
+          (x) =>
+            x.enrollment_type === 'student' &&
+            this.user.course_id.includes(x.course_id)
+        )
+      : enrollment.filter(
+          (x) =>
+            x.enrollment_type === 'student' &&
+            x.enrollment_state == 'active' &&
+            this.user.course_id.includes(x.course_id)
+        );
+  }
+
   ngAfterViewInit(): void {
     this.userData.dataSource.paginator = this.paginator;
-    this.paginator.page.subscribe((event: PageEvent) => {
-      console.log('Page:', event.pageIndex, 'Size:', event.pageSize);
-    });
+    this.paginator.page.subscribe((event: PageEvent) => {});
   }
 
   deleteEnrollment(enrollment: EnrollmentDetails) {
@@ -101,9 +112,7 @@ export class UserComponent
         this.store.deleteEnrollment(enrollment).subscribe(() => {
           this.enrollmentData$ = this.store.getEnrollmentsWithDetails();
           this.enrollmentData$.subscribe((enrollments) => {
-            const studentEnrollment = enrollments.filter(
-              (x) => x.enrollment_type === 'student'
-            );
+            const studentEnrollment = this.getStudentEnrollment(enrollments);
             this.userData.dataSource.data = studentEnrollment;
           });
         });

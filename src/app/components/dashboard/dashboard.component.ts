@@ -5,7 +5,10 @@ import { map } from 'rxjs/operators';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { ChartDataset, ChartType } from 'chart.js';
 import { Course, Topic, Enrollment } from '../../models/lms-models';
-import { EnrollmentDetails } from '../../service/csv-data-service.service';
+import {
+  EnrollmentDetails,
+  TopicDetails,
+} from '../../service/csv-data-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
 
 interface MiniCard {
@@ -75,37 +78,10 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     ]).pipe(
       map(([courses, users, topicsWithDetails]) => {
         var commonChartList: CommonChart[] = [];
-
-        var data: { [key: string]: number } = topicsWithDetails.reduce(
-          (previousVal: any, currentVal) => {
-            const groupValue = currentVal['course_id'];
-            previousVal[groupValue] =
-              (previousVal[groupValue] || 0) + currentVal.entries.length;
-            return previousVal;
-          },
-          {} as { [key: string]: number }
+        const barChartConfig: CommonChart = this.getEntriesPerCourse(
+          topicsWithDetails,
+          courses
         );
-
-        const labels: string[] = Object.keys(data).map(
-          (x) =>
-            courses.find((c) => c.course_id.toString() == x)?.course_name ?? ''
-        );
-        const counts: number[] = Object.entries(data).map((x) => x[1]);
-        const barChartData: ChartDataset[] = [
-          { data: counts, label: 'Entries' },
-        ];
-
-        const barChartConfig: CommonChart = {
-          title: 'Entries per Course',
-          subtitle: 'Number of entries created per course',
-          barChartLabels: labels.length ? labels : ['No Data'],
-          barChartData,
-          barChartType: 'bar',
-          barChartLegend: true,
-          height: '20vh',
-          maxValue: this.getMaxValue(barChartData),
-        };
-
         commonChartList.push(barChartConfig);
         const chart = this.createTopicCommonChartStats(
           courses,
@@ -130,6 +106,39 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     this.studentData$ = this.store
       .getEnrollmentsWithDetails()
       .pipe(map((users) => this.createStudentChartStats(users)));
+  }
+
+  private getEntriesPerCourse(
+    topicsWithDetails: TopicDetails[],
+    courses: Course[]
+  ) {
+    var data: { [key: string]: number } = topicsWithDetails.reduce(
+      (previousVal: any, currentVal) => {
+        const groupValue = currentVal['course_id'];
+        previousVal[groupValue] =
+          (previousVal[groupValue] || 0) + currentVal.entries.length;
+        return previousVal;
+      },
+      {} as { [key: string]: number }
+    );
+
+    const labels: string[] = Object.keys(data).map(
+      (x) => courses.find((c) => c.course_id.toString() == x)?.course_name ?? ''
+    );
+    const counts: number[] = Object.entries(data).map((x) => x[1]);
+    const barChartData: ChartDataset[] = [{ data: counts, label: 'Entries' }];
+
+    const barChartConfig: CommonChart = {
+      title: 'Entries per Course',
+      subtitle: 'Number of entries created per course',
+      barChartLabels: labels.length ? labels : ['No Data'],
+      barChartData,
+      barChartType: 'bar',
+      barChartLegend: true,
+      height: '20vh',
+      maxValue: this.getMaxValue(barChartData),
+    };
+    return barChartConfig;
   }
 
   override ngOnInit(): void {

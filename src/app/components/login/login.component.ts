@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { LoginUserInformation } from '../../models/lms-models';
+import { LoginUser } from '../../models/lms-models';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 
 @Component({
@@ -17,14 +17,21 @@ export class LoginComponent {
   password = '';
   error = '';
 
-  users: LoginUserInformation[] = [
+  users: LoginUser[] = [
     {
       username: 'instructor',
       password: 'i123',
       role: 'instructor',
       name: 'John',
+      course_id: [23409],
     },
-    { username: 'admin', password: 'a123', role: 'admin', name: 'Mary' },
+    {
+      username: 'admin',
+      password: 'a123',
+      role: 'admin',
+      name: 'Mary',
+      course_id: [23409,75861,34290,15697,22376],
+    },
   ];
 
   login() {
