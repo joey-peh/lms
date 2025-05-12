@@ -12,8 +12,8 @@
             {{ column.displayName }}
             <input
               matInput
-              (keyup)="applyFilter($event, column.columnDef)"
-              placeholder="Filter by"
+              (keyup)="applyFilter($event, column.columnDef)" 
+              [placeholder]="'Filter by ' + column.displayName"
             />
           </th>
           <td mat-cell *matCellDef="let element">

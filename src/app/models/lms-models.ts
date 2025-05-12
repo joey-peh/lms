@@ -42,6 +42,7 @@ export interface ColumnConfig {
   sortable: boolean;
   filterable: boolean;
 }
+
 export interface User {
   user_id: number;
   user_name: string;

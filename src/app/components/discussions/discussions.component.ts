@@ -48,6 +48,8 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
     displayedColumns: [],
   };
 
+  columnFilters: { [key: string]: string } = {};
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngOnInit(): void {
@@ -57,7 +59,28 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
       this.configureDiscussionTable(topics);
       this.cdr.markForCheck();
     });
+
+    this.discussionData.dataSource.filterPredicate = (
+      data: TopicWithDetails,
+      filter: string
+    ): boolean => {
+      const filters: { id: string; value: string }[] = JSON.parse(filter);
+
+      return filters.every(({ id, value }) => {
+        const config = this.discussionData.columnConfigs.find(
+          (col) => col.columnDef === id
+        );
+        if (!config || !config.filterable) return true;
+
+        const cellValue = config.cell(data);
+        return cellValue
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
+    };
   }
+
   ngAfterViewInit(): void {
     this.discussionData.dataSource.paginator = this.paginator;
   }
@@ -113,12 +136,14 @@ export class DiscussionsComponent implements OnInit, AfterViewInit {
   }
 
   applyFilter(event: Event, column: string): void {
-    const tableFilters = [];
-    const filterValue = (event.target as HTMLInputElement).value;
-    tableFilters.push({
-      id: column,
-      value: filterValue,
-    });
+    const value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.columnFilters[column] = value;
+
+    const tableFilters = Object.keys(this.columnFilters).map((key) => ({
+      id: key,
+      value: this.columnFilters[key],
+    }));
+
     this.discussionData.dataSource.filter = JSON.stringify(tableFilters);
   }
 }
