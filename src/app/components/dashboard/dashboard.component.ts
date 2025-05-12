@@ -163,7 +163,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
     const barChartConfig: CommonChart = {
       title: 'Entries by User',
-      subtitle: 'Number of entries created by user',
+      subtitle: 'Find the user with the highest posting frequency',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -278,10 +278,10 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   ): CommonChart[] {
     return [
       this.getTopicsPerCourse(courses, topics),
+      this.getTopicsPerUser(users, topics),
       this.getTopicsOverTime(topics),
       this.getTopicStatesDistribution(topics),
-      this.getTopicsPerUser(users, topics),
-    ].filter((chart) => chart.barChartLabels.length > 0); // Filter out empty charts
+    ].filter((chart) => chart.barChartLabels.length > 0);
   }
 
   private getTopicsPerCourse(courses: Course[], topics: Topic[]): CommonChart {
@@ -333,7 +333,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
     return {
       title: 'Topics Over Time',
-      subtitle: 'Useful for getting peak of creation',
+      subtitle: 'Find the peak of creation',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'line',
@@ -396,7 +396,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
     return {
       title: 'Topics by User',
-      subtitle: 'Find out frequent poster',
+      subtitle: 'Find the user with the highest posting frequency',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
