@@ -84,11 +84,11 @@ export class CsvDataStoreService {
     this.updateState({ currentUser: user });
   }
 
-  getTopicsWithDetails(): Observable<TopicDetails[]> {
+  getTopicDetails(): Observable<TopicDetails[]> {
     return this.csvDataService.getTopicsWithDetails();
   }
 
-  getEnrollmentsWithDetails(): Observable<EnrollmentDetails[]> {
+  getEnrollmentDetails(): Observable<EnrollmentDetails[]> {
     return this.csvDataService.getEnrollmentWithDetails();
   }
 
@@ -98,6 +98,11 @@ export class CsvDataStoreService {
 
   deleteEnrollment(enrollment: EnrollmentDetails): Observable<void> {
     this.csvDataService.deleteEnrollment(enrollment);
+    return of(void 0);
+  }
+
+  deleteTopics(topic: TopicDetails): Observable<void> {
+    this.csvDataService.deleteTopic(topic);
     return of(void 0);
   }
 

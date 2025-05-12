@@ -12,6 +12,7 @@
             mat-icon-button
             color="warn"
             (click)="deleteEnrollment(element)"
+            *ngIf="element.enrollment_state !== 'deleted'"
           >
             <mat-icon>delete</mat-icon>
           </button>

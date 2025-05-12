@@ -4,7 +4,7 @@ import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { ChartDataset, ChartType } from 'chart.js';
-import { Course, Topic, Enrollment } from '../../models/lms-models';
+import { Course, Topic, Enrollment, User } from '../../models/lms-models';
 import {
   EnrollmentDetails,
   TopicDetails,
@@ -41,7 +41,6 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   courses$ = this.store.getCourses();
-  enrollments$ = this.store.getEnrollments();
 
   miniCardData$: Observable<MiniCard[]>;
   topicData$: Observable<CommonChart[]>;
@@ -63,8 +62,8 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     super();
     this.miniCardData$ = combineLatest([
       this.courses$,
-      this.store.getEnrollmentsWithDetails(),
-      this.store.getTopicsWithDetails(),
+      this.store.getEnrollmentDetails(),
+      this.store.getTopicDetails(),
     ]).pipe(
       map(([courses, users, topics]) =>
         this.createMiniCardData(courses, users, topics)
@@ -73,16 +72,15 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
     this.topicData$ = combineLatest([
       this.courses$,
-      this.store.getEnrollmentsWithDetails(),
-      this.store.getTopicsWithDetails(),
+      this.store.getEnrollmentDetails(),
+      this.store.getTopicDetails(),
     ]).pipe(
       map(([courses, users, topicsWithDetails]) => {
         var commonChartList: CommonChart[] = [];
-        const barChartConfig: CommonChart = this.getEntriesPerCourse(
-          topicsWithDetails,
-          courses
+        commonChartList.push(
+          this.getEntriesPerCourse(topicsWithDetails, courses)
         );
-        commonChartList.push(barChartConfig);
+        commonChartList.push(this.getEntriesPerUser(topicsWithDetails, users));
         const chart = this.createTopicCommonChartStats(
           courses,
           users,
@@ -96,7 +94,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
     this.enrollmentData$ = combineLatest([
       this.courses$,
-      this.enrollments$,
+      this.store.getEnrollmentDetails(),
     ]).pipe(
       map(([courses, enrollments]) =>
         this.createEnrollmentChartStats(courses, enrollments)
@@ -104,7 +102,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     );
 
     this.studentData$ = this.store
-      .getEnrollmentsWithDetails()
+      .getEnrollmentDetails()
       .pipe(map((users) => this.createStudentChartStats(users)));
   }
 
@@ -141,6 +139,39 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     return barChartConfig;
   }
 
+  private getEntriesPerUser(
+    topicsWithDetails: TopicDetails[],
+    users: EnrollmentDetails[]
+  ) {
+    var data: { [key: string]: number } = topicsWithDetails.reduce(
+      (previousVal: any, currentVal) => {
+        const groupValue = currentVal['topic_posted_by_user_id'];
+        previousVal[groupValue] =
+          (previousVal[groupValue] || 0) + currentVal.entries.length;
+        return previousVal;
+      },
+      {} as { [key: string]: number }
+    );
+
+    const labels: string[] = Object.keys(data).map(
+      (x) => users.find((c) => c.user_id.toString() == x)?.user.user_name ?? ''
+    );
+    const counts: number[] = Object.entries(data).map((x) => x[1]);
+    const barChartData: ChartDataset[] = [{ data: counts, label: 'Entries' }];
+
+    const barChartConfig: CommonChart = {
+      title: 'Entries by User',
+      subtitle: 'Number of entries created by user',
+      barChartLabels: labels.length ? labels : ['No Data'],
+      barChartData,
+      barChartType: 'bar',
+      barChartLegend: true,
+      height: '20vh',
+      maxValue: this.getMaxValue(barChartData),
+    };
+    return barChartConfig;
+  }
+
   override ngOnInit(): void {
     super.ngOnInit();
     this.store.loadData();
@@ -148,7 +179,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
   private createMiniCardData(
     courses: Course[],
-    users: EnrollmentDetails[],
+    enrollments: EnrollmentDetails[],
     topics: Topic[]
   ): MiniCard[] {
     return [
@@ -165,11 +196,9 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
         link: () => this.toggleChart('topics'),
       },
       {
-        title: 'Total Active Students',
-        value: users.filter(
-          (x) =>
-            x.enrollment_type == 'student' && x.enrollment_state == 'active'
-        ).length,
+        title:
+          this.user.role === 'admin' ? 'Active Enrollments' : 'Active Students',
+        value: this.getEnrollment(enrollments, false).length,
         icon: 'group',
         link: () => this.toggleChart('students'),
       },
@@ -190,15 +219,17 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       (course) =>
         enrollments.filter(
           (e) =>
-            e.course_id === course.course_id && e.enrollment_state === 'active'
+            e.course_id === course.course_id &&
+            e.enrollment_state === 'active' &&
+            e.enrollment_type == 'student'
         ).length
     );
 
     const barChartData: ChartDataset[] = [
-      { data: counts, label: 'Enrollments' },
+      { data: counts, label: 'Student Enrollments' },
     ];
     return {
-      title: 'Enrollments by Course',
+      title: 'Student Enrollments by Course',
       subtitle: 'Number of enrollment per course',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
@@ -262,7 +293,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     const barChartData: ChartDataset[] = [{ data: counts, label: 'Topics' }];
     return {
       title: 'Topics per Course',
-      subtitle: 'Track number of topics created per course',
+      subtitle: 'Number of topics created per course',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -326,7 +357,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
     return {
       title: 'Topic States Distribution',
-      subtitle: 'Track the topic states',
+      subtitle: 'Track distribution state',
       barChartLabels: labels,
       barChartData,
       barChartType: 'pie',
@@ -356,8 +387,8 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     ];
 
     return {
-      title: 'Topics per User',
-      subtitle: 'To know who is frequent poster',
+      title: 'Topics by User',
+      subtitle: 'Find out frequent poster',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',

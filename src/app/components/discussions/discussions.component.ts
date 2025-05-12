@@ -17,6 +17,7 @@ import {
 } from '../../service/csv-data-service.service';
 import { CommonService as CommonService } from '../../service/common-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-discussions',
@@ -32,9 +33,9 @@ export class DiscussionsComponent
   private cdr = inject(ChangeDetectorRef);
   private commonService = inject(CommonService);
 
-  topics$!: Observable<TopicDetails[]>;
+  topicDetails$!: Observable<TopicDetails[]>;
 
-  discussionData: TableDetails<TopicDetails> = {
+  topicList: TableDetails<TopicDetails> = {
     dataSource: new MatTableDataSource<TopicDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
@@ -52,24 +53,22 @@ export class DiscussionsComponent
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.topics$ = this.store.getTopicsWithDetails();
+    this.topicDetails$ = this.store.getTopicDetails();
 
-    this.topics$.subscribe((topics) => {
-      var filteredTopics = topics.filter((x) =>
-        this.user.course_id.includes(x.course_id)
-      );
+    this.topicDetails$.subscribe((topics) => {
+      var filteredTopics = this.getFilteredTopics(topics);
       this.configureDiscussionTable(filteredTopics);
       this.cdr.markForCheck();
     });
 
-    this.discussionData.dataSource.filterPredicate = (
+    this.topicList.dataSource.filterPredicate = (
       data: TopicDetails,
       filter: string
     ): boolean => {
       const filters: { id: string; value: string }[] = JSON.parse(filter);
 
       return filters.every(({ id, value }) => {
-        const config = this.discussionData.columnConfigs.find(
+        const config = this.topicList.columnConfigs.find(
           (col) => col.columnDef === id
         );
         if (!config || !config.filterable) return true;
@@ -83,11 +82,18 @@ export class DiscussionsComponent
     };
   }
 
+  private getFilteredTopics(topics: TopicDetails[]) {
+    return topics.filter((x) => this.user.course_id.includes(x.course_id));
+  }
+
   ngAfterViewInit(): void {
-    this.discussionData.dataSource.paginator = this.paginator;
+    this.topicList.dataSource.paginator = this.paginator;
   }
 
   selectTopic(row: TopicDetails): void {
+    if (row.topic_state != 'active') {
+      return;
+    }
     var entries = row.entries;
     var { columnConfigs, displayedColumns } =
       this.commonService.configureBaseColumnConfig(
@@ -131,9 +137,18 @@ export class DiscussionsComponent
         ]
       );
 
-    this.discussionData.dataSource.data = topics;
-    this.discussionData.columnConfigs = columnConfigs;
-    this.discussionData.displayedColumns = displayedColumns;
+    columnConfigs.push({
+      columnDef: 'action',
+      displayName: '', // No header for action column
+      cell: () => '',
+      sortable: false,
+      filterable: false,
+    });
+    displayedColumns.push('action');
+
+    this.topicList.dataSource.data = topics;
+    this.topicList.columnConfigs = columnConfigs;
+    this.topicList.displayedColumns = displayedColumns;
   }
 
   applyFilter(event: Event, column: string): void {
@@ -145,6 +160,30 @@ export class DiscussionsComponent
       value: this.columnFilters[key],
     }));
 
-    this.discussionData.dataSource.filter = JSON.stringify(tableFilters);
+    this.topicList.dataSource.filter = JSON.stringify(tableFilters);
+  }
+
+  deleteTopic(element: any) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        message: `Are you sure you want to delete topic?`,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result) {
+        this.store.deleteTopics(element).subscribe(() => {
+          this.topicDetails$ = this.store.getTopicDetails();
+          this.topicDetails$.subscribe((topics) => {
+            this.topicList.dataSource.data = this.getFilteredTopics(topics);
+            this.entry = {
+              dataSource: new MatTableDataSource<EntryDetails>([]),
+              columnConfigs: [],
+              displayedColumns: [],
+            };
+          });
+        });
+      }
+    });
   }
 }

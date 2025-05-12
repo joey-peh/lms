@@ -27,7 +27,6 @@ export class UserComponent
   extends BaseUserComponent
   implements OnInit, AfterViewInit
 {
-  private dialog = inject(MatDialog);
   private store = inject(CsvDataStoreService);
   private commonService = inject(CommonService);
 
@@ -42,9 +41,9 @@ export class UserComponent
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.enrollmentData$ = this.store.getEnrollmentsWithDetails();
+    this.enrollmentData$ = this.store.getEnrollmentDetails();
     this.enrollmentData$.subscribe((enrollment) => {
-      const studentEnrollment = this.getStudentEnrollment(enrollment);
+      const studentEnrollment = this.getEnrollment(enrollment, true);
       var { columnConfigs, displayedColumns } =
         this.commonService.configureBaseColumnConfig(
           studentEnrollment,
@@ -80,21 +79,6 @@ export class UserComponent
     });
   }
 
-  private getStudentEnrollment(enrollment: EnrollmentDetails[]) {
-    return this.user.role == 'admin'
-      ? enrollment.filter(
-          (x) =>
-            x.enrollment_type === 'student' &&
-            this.user.course_id.includes(x.course_id)
-        )
-      : enrollment.filter(
-          (x) =>
-            x.enrollment_type === 'student' &&
-            x.enrollment_state == 'active' &&
-            this.user.course_id.includes(x.course_id)
-        );
-  }
-
   ngAfterViewInit(): void {
     this.userData.dataSource.paginator = this.paginator;
     this.paginator.page.subscribe((event: PageEvent) => {});
@@ -110,9 +94,9 @@ export class UserComponent
     dialogRef.afterClosed().subscribe((result: any) => {
       if (result) {
         this.store.deleteEnrollment(enrollment).subscribe(() => {
-          this.enrollmentData$ = this.store.getEnrollmentsWithDetails();
+          this.enrollmentData$ = this.store.getEnrollmentDetails();
           this.enrollmentData$.subscribe((enrollments) => {
-            const studentEnrollment = this.getStudentEnrollment(enrollments);
+            const studentEnrollment = this.getEnrollment(enrollments, true);
             this.userData.dataSource.data = studentEnrollment;
           });
         });

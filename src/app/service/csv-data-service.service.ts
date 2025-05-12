@@ -99,8 +99,21 @@ export class CsvDataService {
     });
   }
 
+  deleteTopic(topic: TopicDetails): void {
+    const currentState = this.stateSubject.getValue();
+    const updatedTopics = currentState.topics.map((e) =>
+      e.topic_id === topic.topic_id
+        ? { ...e, topic_state: 'deleted' as const }
+        : e
+    );
+    this.stateSubject.next({
+      ...currentState,
+      topics: updatedTopics,
+    });
+  }
+
   getUserDetails(): Observable<UserDetails[]> {
-    return this.loadAllData().pipe(
+    return this.state$.pipe(
       map((state: LmsState) => {
         return state.users.map((user) => {
           // Find all enrollments for the user
@@ -118,7 +131,7 @@ export class CsvDataService {
   }
 
   getTopicsWithDetails(): Observable<TopicDetails[]> {
-    return this.loadAllData().pipe(
+    return this.state$.pipe(
       map((state: LmsState) => {
         return state.topics.map((topic) => {
           // Find the course for the topic
