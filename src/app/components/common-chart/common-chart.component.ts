@@ -8,14 +8,15 @@ Chart.register(ChartDataLabels);
   selector: 'app-common-chart',
   standalone: false,
   templateUrl: './common-chart.component.html',
-  styleUrl: './common-chart.component.css'
+  styleUrl: './common-chart.component.css',
 })
 export class CommonChartComponent implements OnInit {
   @Input() barChartLabels: string[] = [];
   @Input() barChartType: ChartType = 'bar';
   @Input() barChartLegend = true;
   @Input() barChartData: ChartDataset[] = [];
-  @Input() height = "30vh";
+  @Input() height = '30vh';
+  @Input() width : string | undefined = '100%';
   @Input() maxValue: number = 0;
 
   barChartOptions: ChartOptions = {};
@@ -27,27 +28,27 @@ export class CommonChartComponent implements OnInit {
           left: 20,
           right: 20,
           top: 30,
-          bottom: 20
-        }
+          bottom: 20,
+        },
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: this.maxValue,
-        }
-      },
+      scales:
+        this.barChartType == 'pie'
+          ? {}
+          : {
+              y: {
+                beginAtZero: true,
+                max: this.maxValue,
+              },
+            },
       plugins: {
         datalabels: {
           anchor: 'end',
           align: 'top',
           color: '##3f51b5',
-          font: {
-            weight: 'bold'
-          },
-          formatter: (value) => value
-        }
-      }
+          formatter: (value) => value,
+        },
+        legend: { position: this.barChartType == 'pie' ? 'right' : 'top' },
+      },
     };
   }
 }
-

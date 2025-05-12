@@ -1,8 +1,6 @@
 .parent {
     display: flex;            /* or grid, depending on your layout */
     flex-direction: column;   /* or row, as needed */
-    /* height: 18vh;             or a fixed height like 300px */
-    width: 100%;              /* or fixed width */
     overflow: hidden;         /* prevents children from spilling out */
     position: relative;       /* if you need absolute children inside */
   }

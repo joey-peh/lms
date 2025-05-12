@@ -26,6 +26,7 @@ interface CommonChart {
   barChartType: ChartType;
   barChartLegend: boolean;
   height: string;
+  width: string | undefined;
   maxValue: number;
 }
 
@@ -135,6 +136,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
+      width: undefined
     };
     return barChartConfig;
   }
@@ -168,6 +170,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
+      width: undefined
     };
     return barChartConfig;
   }
@@ -190,8 +193,8 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
         link: () => this.toggleChart('course'),
       },
       {
-        title: 'Total Topics',
-        value: topics.length,
+        title: 'Active Topics',
+        value: topics.filter((topic) => topic.topic_state === 'active').length,
         icon: 'forum',
         link: () => this.toggleChart('topics'),
       },
@@ -237,6 +240,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '50vh',
       maxValue: this.getMaxValue(barChartData),
+      width: undefined
     };
   }
 
@@ -263,6 +267,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
+      width: undefined
     };
   }
 
@@ -300,6 +305,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
+      width: undefined
     };
   }
 
@@ -334,6 +340,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
+      width: undefined
     };
   }
 
@@ -362,7 +369,8 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartData,
       barChartType: 'pie',
       barChartLegend: true,
-      height: '20vh',
+      height: '25vh',
+      width: '100%',
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -395,6 +403,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
+      width: undefined
     };
   }
 
