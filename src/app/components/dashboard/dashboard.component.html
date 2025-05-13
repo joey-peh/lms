@@ -20,14 +20,12 @@
 
     <div *ngIf="show.topics">
       <ng-container *ngIf="topicData$ | async as topicData">
-        <mat-grid-tile [colspan]="4" [rowspan]="1">
+        <!-- <mat-grid-tile [colspan]="4" [rowspan]="1">
           <app-card>
             <ng-container>
-              <div>Total topics (including inactive): {{ topicData.length }}</div>
-              <div>Total entries (including inactive): {{ topicData.entries.length }}</div>
             </ng-container>
           </app-card>
-        </mat-grid-tile>
+        </mat-grid-tile> -->
         <mat-grid-tile
           *ngFor="let topicStat of topicData"
           [colspan]="(cardLayout | async)?.midCard?.cols"
@@ -47,9 +45,31 @@
       ></ng-container>
     </div>
 
+    <div *ngIf="show.entries">
+      <mat-grid-tile [colspan]="4" [rowspan]="1">
+        <app-card
+          >
+          <!-- <table>
+            <thead>
+              <tr>
+                <th *ngFor="let header of participationTable.headers">
+                  {{ header }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of participationTable.rows">
+                <td>{{ row.name }}</td>
+                <td *ngFor="let value of row.values">{{ value }}</td>
+              </tr>
+            </tbody>
+          </table> -->
+        </app-card>
+      </mat-grid-tile>
+    </div>
+
     <div *ngIf="show.course">
       <mat-grid-tile
-        *ngFor="let i of [1]"
         [colspan]="(cardLayout | async)?.largeCard?.cols"
         [rowspan]="(cardLayout | async)?.largeCard?.rows"
       >

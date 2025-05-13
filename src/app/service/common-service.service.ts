@@ -109,29 +109,4 @@ export class CommonService {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   }
-
-  getMaxValue(barChartData: ChartDataset[]): number {
-    const data = barChartData
-      .flatMap((dataset) =>
-        Array.isArray(dataset.data)
-          ? dataset.data.filter((val): val is number => val != null)
-          : []
-      )
-      .filter((val) => val > 0);
-    return data.length ? Math.ceil(Math.max(...data) * 1.2) : 1;
-  }
-
-  getTop5SortedLabelsAndCounts<T>(
-    data: { [key: string]: number },
-    mapKeyToLabel: (key: string) => string
-  ): { labels: string[]; counts: number[] } {
-    const sorted = Object.entries(data)
-      .sort((a, b) => b[1] - a[1]) // Sort by count in descending order
-      .slice(0, 5); // Limit to top 5
-
-    const labels: string[] = sorted.map(([key]) => mapKeyToLabel(key));
-    const counts: number[] = sorted.map(([, count]) => count);
-
-    return { labels, counts };
-  }
 }
