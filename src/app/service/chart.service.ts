@@ -14,6 +14,12 @@ import { CommonChart } from '../components/dashboard/dashboard.component';
 export class ChartService {
   constructor() {}
 
+  private getDynamicVh(referenceHeight: number = 288): string {
+    const viewportHeight = window.innerHeight; // Current viewport height in pixels
+    const vh = (referenceHeight / viewportHeight) * 100;
+    return `${vh.toFixed(2)}vh`; // Round to 2 decimal places
+  }
+
   getUserRole = (userId: string, users: EnrollmentDetails[]) => {
     const user = users.find((u) => u.user_id.toString() === userId);
     return user?.enrollment_type?.toLowerCase();
@@ -79,7 +85,7 @@ export class ChartService {
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -127,7 +133,7 @@ export class ChartService {
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -166,7 +172,7 @@ export class ChartService {
       barChartData: [{ data, label: 'Discussion Activity' }],
       barChartType: 'line', // Change to 'bar' if you want a bar chart
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue([{ data }]),
     };
   }
@@ -233,9 +239,9 @@ export class ChartService {
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
-      displayLabel: false
+      displayLabel: false,
     };
   }
 
@@ -284,7 +290,7 @@ export class ChartService {
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -332,7 +338,7 @@ export class ChartService {
       barChartData,
       barChartType: 'line',
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -369,8 +375,7 @@ export class ChartService {
       barChartData,
       barChartType: 'pie',
       barChartLegend: true,
-      height: '25vh',
-      width: '100%',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -423,7 +428,7 @@ export class ChartService {
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -498,7 +503,7 @@ export class ChartService {
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -537,7 +542,7 @@ export class ChartService {
       barChartData,
       barChartType: 'pie',
       barChartLegend: true,
-      height: '25vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -583,7 +588,7 @@ export class ChartService {
       barChartData,
       barChartType: 'line', // You can change this to 'bar' if preferred
       barChartLegend: true,
-      height: '20vh',
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
