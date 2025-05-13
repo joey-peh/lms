@@ -199,7 +199,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
         displayName: 'Student Name',
         cell: (row: { name: string }) => row.name,
         sortable: false,
-        filterable: false,
+        filterable: true,
       },
     ];
     const zeroStudents = this.getZeroParticipationStudents(topics, enrollments);

@@ -67,7 +67,7 @@ export class UserComponent extends BaseUserComponent implements OnInit {
           displayName: '', // No header for action column
           cell: () => '',
           sortable: false,
-          filterable: false,
+          filterable: true,
         });
         displayedColumns.push('action');
       }

@@ -12,7 +12,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 
 export interface TableRow {
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 @Component({
@@ -24,12 +24,11 @@ export interface TableRow {
 export class CommonTableComponent implements AfterViewInit, OnInit {
   private cdr = inject(ChangeDetectorRef);
   protected dialog = inject(MatDialog);
-  
+
   @Input() tableData!: TableDetails<TableRow>;
   @Input() deleteFn?: (data: any) => void;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-
 
   columnFilters: { [key: string]: string } = {};
   showDeleteButton: boolean = false;
@@ -49,7 +48,10 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
           (col) => col.columnDef === id
         );
 
-        if (!config || !config.filterable) return true;
+        console.log('filter', id, value);
+        if (!config || !config.filterable) {
+          return true;
+        }
 
         const cellValue = config.cell(data);
         return cellValue

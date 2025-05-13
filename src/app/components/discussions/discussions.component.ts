@@ -196,7 +196,7 @@ export class DiscussionsComponent
       displayName: '',
       cell: () => '',
       sortable: false, // Disable sorting for action column
-      filterable: false,
+      filterable: true,
     });
     displayedColumns.push('action');
 
