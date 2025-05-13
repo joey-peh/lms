@@ -4,7 +4,13 @@ import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { ChartDataset, ChartType } from 'chart.js';
-import { Course, Topic, Enrollment, User } from '../../models/lms-models';
+import {
+  Course,
+  Topic,
+  Enrollment,
+  User,
+  TableDetails,
+} from '../../models/lms-models';
 import {
   EnrollmentDetails,
   EntryDetails,
@@ -13,6 +19,7 @@ import {
 import { BaseUserComponent } from '../base/base-user.component';
 import { CommonService } from '../../service/common-service.service';
 import { ChartService } from '../../service/chart.service';
+import { MatTableDataSource } from '@angular/material/table';
 
 interface MiniCard {
   title: string;
@@ -33,6 +40,11 @@ export interface CommonChart {
   maxValue: number;
 }
 
+export interface ParticipationRow {
+  name: string;
+  [key: string]: string | number; // dynamic keys for each month
+}
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -49,6 +61,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
   miniCardData$: Observable<MiniCard[]>;
   topicData$: Observable<CommonChart[]>;
+  entryData$: Observable<CommonChart[]>;
   enrollmentData$: Observable<CommonChart>;
 
   show = { course: false, students: false, topics: false, entries: false };
@@ -61,6 +74,12 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       largeCard: { cols: matches ? 1 : 4, rows: 4 },
     }))
   );
+
+  participationData: TableDetails<ParticipationRow> = {
+    dataSource: new MatTableDataSource<ParticipationRow>([]),
+    columnConfigs: [],
+    displayedColumns: [],
+  };
 
   constructor() {
     super();
@@ -81,17 +100,29 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     ]).pipe(
       map(([courses, users, topicDetails]) => {
         var commonChartList: CommonChart[] = [
-          this.chartService.getEngagementByCourse(topicDetails, courses, users),
-          this.chartService.getDiscussionActivityOverTime(topicDetails),
           this.chartService.getTopicsByRole(topicDetails, users),
-          this.chartService.getEntriesByRole(topicDetails, users),
-          this.chartService.getEntriesByStudent(topicDetails, users),
-          this.chartService.getEntriesOverTime(topicDetails),
-          this.chartService.getEntriesPerCourse(topicDetails, courses, users),
           this.chartService.getTopicsPerCourse(courses, topicDetails),
           this.chartService.getTopicsPerUser(users, topicDetails),
           this.chartService.getTopicsOverTime(topicDetails),
           this.chartService.getTopicStatesDistribution(topicDetails),
+        ];
+        return commonChartList;
+      })
+    );
+
+    this.entryData$ = combineLatest([
+      this.courses$,
+      this.store.getEnrollmentDetails(),
+      this.store.getTopicDetails(),
+    ]).pipe(
+      map(([courses, users, topicDetails]) => {
+        var commonChartList: CommonChart[] = [
+          this.chartService.getEngagementByCourse(topicDetails, courses, users),
+          this.chartService.getDiscussionActivityOverTime(topicDetails),
+          this.chartService.getEntriesByRole(topicDetails, users),
+          this.chartService.getEntriesByStudent(topicDetails, users),
+          this.chartService.getEntriesOverTime(topicDetails),
+          this.chartService.getEntriesPerCourse(topicDetails, courses, users),
         ];
         return commonChartList;
       })
@@ -110,6 +141,44 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   override ngOnInit(): void {
     super.ngOnInit();
     this.store.loadData();
+
+    combineLatest([
+      this.store.getTopicDetails(),
+      this.store.getEnrollmentDetails(),
+    ]).subscribe(([topics, enrollments]) => {
+      const participationTable = this.getParticipationTable(
+        topics,
+        enrollments
+      );
+
+      // Build table structure
+      const columns = ['name', ...participationTable.headers.slice(1)];
+      this.participationData.displayedColumns = columns;
+
+      this.participationData.columnConfigs = columns.map((col) => ({
+        columnDef: col,
+        displayName: col === 'name' ? 'Student Name' : col,
+        cell: (row: ParticipationRow) => `${row[col] ?? ''}`,
+        sortable: false,
+        filterable: false,
+      }));
+
+      // Convert row objects to ParticipationRow format
+      const tableRows: ParticipationRow[] = participationTable.rows.map(
+        (row) => {
+          const participationRow: ParticipationRow = { name: row.name };
+          participationTable.headers.slice(1).forEach((month, idx) => {
+            participationRow[month] = row.values[idx];
+          });
+          return participationRow;
+        }
+      );
+
+      this.participationData.dataSource =
+        new MatTableDataSource<ParticipationRow>(tableRows);
+
+      this.cdr.markForCheck();
+    });
   }
 
   getParticipationTable(

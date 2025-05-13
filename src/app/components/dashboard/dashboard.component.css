@@ -13,3 +13,12 @@
 .dashboard-card-content {
   text-align: center;
 }
+
+.full-width-table {
+  width: 100%;
+  overflow: auto;
+}
+
+.participation-card {
+  margin-bottom: 20px;
+}
