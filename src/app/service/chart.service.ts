@@ -537,7 +537,7 @@ export class ChartService {
       barChartData,
       barChartType: 'pie',
       barChartLegend: true,
-      height: '20vh',
+      height: '25vh',
       maxValue: this.getMaxValue(barChartData),
     };
   }
