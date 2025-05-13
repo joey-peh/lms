@@ -2,8 +2,8 @@
   display: flex;
   align-items: center;
   border-radius: 8px;
-  margin-bottom: 12px;
   justify-content: center;
+  padding: 30px;
 }
 
 .text-container .title {
