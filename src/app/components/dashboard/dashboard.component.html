@@ -4,10 +4,6 @@
     >Click on the mini cards for more information</mat-card-subtitle
   >
   <mat-grid-list cols="{{ (cardLayout | async)?.columns }}" rowHeight="200px">
-    <!-- <mat-grid-tile *ngFor="let i of [1, 2, 3, 4]" [colspan]="( cardLayout | async )?.miniCard?.cols"
-      [rowspan]="( cardLayout | async )?.miniCard?.rows">
-      <app-card title="Card {{i}}">
-        <div> -->
     <mat-grid-tile
       *ngFor="let mc of miniCardData$ | async"
       [colspan]="(cardLayout | async)?.miniCard?.cols"
@@ -21,27 +17,34 @@
         ></app-mini-card>
       </app-card>
     </mat-grid-tile>
-    <!-- </div>
-    </mat-grid-tile> -->
 
     <div *ngIf="show.topics">
-      <mat-grid-tile
-        *ngFor="let topicStat of topicData$ | async"
-        [colspan]="(cardLayout | async)?.midCard?.cols"
-        [rowspan]="(cardLayout | async)?.midCard?.rows"
-      >
-        <app-card [title]="topicStat.title" [subtitle]="topicStat.subtitle">
-          <app-common-chart
-            [height]="topicStat.height"
-            [width]="topicStat.width"
-            [barChartLabels]="topicStat.barChartLabels"
-            [barChartData]="topicStat.barChartData"
-            [barChartType]="topicStat.barChartType"
-            [barChartLegend]="topicStat.barChartLegend"
-            [maxValue]="topicStat.maxValue"
-          ></app-common-chart>
-        </app-card>
-      </mat-grid-tile>
+      <ng-container *ngIf="topicData$ | async as topicData">
+        <mat-grid-tile [colspan]="4" [rowspan]="1">
+          <app-card>
+            <ng-container>
+              <div>Total topics (including inactive): {{ topicData.length }}</div>
+              <div>Total entries (including inactive): {{ topicData.entries.length }}</div>
+            </ng-container>
+          </app-card>
+        </mat-grid-tile>
+        <mat-grid-tile
+          *ngFor="let topicStat of topicData"
+          [colspan]="(cardLayout | async)?.midCard?.cols"
+          [rowspan]="(cardLayout | async)?.midCard?.rows"
+        >
+          <app-card [title]="topicStat.title" [subtitle]="topicStat.subtitle">
+            <app-common-chart
+              [height]="topicStat.height"
+              [width]="topicStat.width"
+              [barChartLabels]="topicStat.barChartLabels"
+              [barChartData]="topicStat.barChartData"
+              [barChartType]="topicStat.barChartType"
+              [barChartLegend]="topicStat.barChartLegend"
+              [maxValue]="topicStat.maxValue"
+            ></app-common-chart>
+          </app-card> </mat-grid-tile
+      ></ng-container>
     </div>
 
     <div *ngIf="show.course">

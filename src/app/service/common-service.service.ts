@@ -102,34 +102,6 @@ export class CommonService {
     return { displayedColumns, columnConfigs };
   }
 
-  flattenObject<T extends Record<string, any>>(
-    obj: T,
-    prefix: string = '',
-    excludeArrays: string[] = []
-  ): Record<string, any> {
-    const flattened: Record<string, any> = {};
-
-    for (const [key, value] of Object.entries(obj)) {
-      const newKey = prefix ? `${prefix}_${key}` : key;
-
-      // Skip arrays if specified (e.g., 'entries')
-      if (excludeArrays.includes(key) && Array.isArray(value)) {
-        flattened[key] = value;
-        continue;
-      }
-
-      // If value is an object and not an array, flatten it
-      if (value && typeof value === 'object' && !Array.isArray(value)) {
-        const nested = this.flattenObject(value, newKey, excludeArrays);
-        Object.assign(flattened, nested);
-      } else {
-        flattened[newKey] = value;
-      }
-    }
-
-    return flattened;
-  }
-
   formatDisplayName(key: string): string {
     return key
       .replace(/topic_|user_/g, '')
@@ -147,5 +119,19 @@ export class CommonService {
       )
       .filter((val) => val > 0);
     return data.length ? Math.ceil(Math.max(...data) * 1.2) : 1;
+  }
+
+  getTop5SortedLabelsAndCounts<T>(
+    data: { [key: string]: number },
+    mapKeyToLabel: (key: string) => string
+  ): { labels: string[]; counts: number[] } {
+    const sorted = Object.entries(data)
+      .sort((a, b) => b[1] - a[1]) // Sort by count in descending order
+      .slice(0, 5); // Limit to top 5
+
+    const labels: string[] = sorted.map(([key]) => mapKeyToLabel(key));
+    const counts: number[] = sorted.map(([, count]) => count);
+
+    return { labels, counts };
   }
 }

@@ -9,12 +9,13 @@ import { MatDialog } from '@angular/material/dialog';
 export abstract class BaseUserComponent implements OnInit, OnDestroy {
   protected csvDataStore = inject(CsvDataStoreService);
   protected dialog = inject(MatDialog);
-  
+
   protected user: LoginUser = {
+    user_login_id: '',
     username: '',
     password: '',
     role: '',
-    name: '',
+    user_id: '',
     course_id: [],
   };
 
@@ -25,10 +26,11 @@ export abstract class BaseUserComponent implements OnInit, OnDestroy {
       .getCurrentUser()
       .subscribe((user) => {
         this.user = user ?? {
+          user_login_id: '',
           username: '',
           password: '',
           role: '',
-          name: '',
+          user_id: '',
           course_id: [],
         };
       });

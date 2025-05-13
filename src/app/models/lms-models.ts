@@ -54,10 +54,11 @@ export interface User {
 }
 
 export interface LoginUser {
+  user_login_id: string;
   username: string;
   password: string;
   role: string;
-  name: string;
+  user_id: string;
   course_id: number[];
 }
 

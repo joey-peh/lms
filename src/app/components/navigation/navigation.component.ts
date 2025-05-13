@@ -18,7 +18,6 @@ interface MenuItem {
   styleUrls: ['./navigation.component.css'],
   standalone: false,
 })
-
 export class NavComponent extends BaseUserComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly breakpointObserver = inject(BreakpointObserver);
@@ -27,15 +26,15 @@ export class NavComponent extends BaseUserComponent implements OnInit {
 
   private readonly menuItems: MenuItem[] = [
     {
-      label: 'Discussions',
-      link: 'discussions',
-      icon: 'forum',
-      roles: ['admin', 'instructor'],
-    },
-    {
       label: 'Dashboard',
       link: 'home',
       icon: 'home',
+      roles: ['admin', 'instructor'],
+    },
+    {
+      label: 'Discussions',
+      link: 'discussions',
+      icon: 'forum',
       roles: ['admin', 'instructor'],
     },
   ];

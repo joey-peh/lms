@@ -19,23 +19,25 @@ export class LoginComponent {
 
   users: LoginUser[] = [
     {
-      username: 'instructor',
+      user_login_id: 'o6v7dy55',
+      user_id: '80299',
+      username: 'user_115',
       password: 'i123',
       role: 'instructor',
-      name: 'John',
       course_id: [23409],
     },
     {
+      user_login_id: 'admin',
+      user_id: 'admin',
       username: 'admin',
       password: 'a123',
       role: 'admin',
-      name: 'Mary',
-      course_id: [23409,75861,34290,15697,22376],
+      course_id: [23409, 75861, 34290, 15697, 22376],
     },
   ];
 
   login() {
-    const user = this.users.find((u) => u.username === this.username);
+    const user = this.users.find((u) => u.user_login_id === this.username);
     if (user && user.password === this.password) {
       // Store the user in the store instead of localStorage
       this.csvDataStore.setCurrentUser(user);

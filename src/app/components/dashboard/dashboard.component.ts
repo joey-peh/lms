@@ -7,9 +7,11 @@ import { ChartDataset, ChartType } from 'chart.js';
 import { Course, Topic, Enrollment, User } from '../../models/lms-models';
 import {
   EnrollmentDetails,
+  EntryDetails,
   TopicDetails,
 } from '../../service/csv-data-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
+import { CommonService } from '../../service/common-service.service';
 
 interface MiniCard {
   title: string;
@@ -40,13 +42,14 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private store = inject(CsvDataStoreService);
   private cdr = inject(ChangeDetectorRef);
+  private commonService = inject(CommonService);
 
   courses$ = this.store.getCourses();
 
   miniCardData$: Observable<MiniCard[]>;
   topicData$: Observable<CommonChart[]>;
   enrollmentData$: Observable<CommonChart>;
-  studentData$: Observable<CommonChart>;
+  // studentData$: Observable<CommonChart>;
 
   show = { course: false, students: false, topics: false };
 
@@ -78,16 +81,16 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     ]).pipe(
       map(([courses, users, topicsWithDetails]) => {
         var commonChartList: CommonChart[] = [];
-        commonChartList.push(
-          this.getEntriesPerCourse(topicsWithDetails, courses)
-        );
-        commonChartList.push(this.getEntriesPerUser(topicsWithDetails, users));
         const chart = this.createTopicCommonChartStats(
           courses,
           users,
           topicsWithDetails
         );
         commonChartList.push(...chart);
+        commonChartList.push(
+          this.getEntriesPerCourse(topicsWithDetails, courses)
+        );
+        commonChartList.push(this.getEntriesPerUser(topicsWithDetails, users));
 
         return commonChartList;
       })
@@ -102,9 +105,9 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       )
     );
 
-    this.studentData$ = this.store
-      .getEnrollmentDetails()
-      .pipe(map((users) => this.createStudentChartStats(users)));
+    // this.studentData$ = this.store
+    //   .getEnrollmentDetails()
+    //   .pipe(map((users) => this.createStudentChartStats(users)));
   }
 
   private getEntriesPerCourse(
@@ -121,10 +124,10 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       {} as { [key: string]: number }
     );
 
-    const labels: string[] = Object.keys(data).map(
+    const { labels, counts } = this.commonService.getTop5SortedLabelsAndCounts(
+      data,
       (x) => courses.find((c) => c.course_id.toString() == x)?.course_name ?? ''
     );
-    const counts: number[] = Object.entries(data).map((x) => x[1]);
     const barChartData: ChartDataset[] = [{ data: counts, label: 'Entries' }];
 
     const barChartConfig: CommonChart = {
@@ -136,7 +139,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined
+      width: undefined,
     };
     return barChartConfig;
   }
@@ -144,33 +147,37 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   private getEntriesPerUser(
     topicsWithDetails: TopicDetails[],
     users: EnrollmentDetails[]
-  ) {
-    var data: { [key: string]: number } = topicsWithDetails.reduce(
+  ): CommonChart {
+    var allEntries: EntryDetails[] = topicsWithDetails
+      .map((x) => x.entries)
+      .flat();
+
+    var data: { [key: string]: number } = allEntries.reduce(
       (previousVal: any, currentVal) => {
-        const groupValue = currentVal['topic_posted_by_user_id'];
-        previousVal[groupValue] =
-          (previousVal[groupValue] || 0) + currentVal.entries.length;
+        const groupValue = currentVal['entry_posted_by_user_id'];
+        previousVal[groupValue] = (previousVal[groupValue] || 0) + 1;
         return previousVal;
       },
       {} as { [key: string]: number }
     );
 
-    const labels: string[] = Object.keys(data).map(
-      (x) => users.find((c) => c.user_id.toString() == x)?.user.user_name ?? ''
+    const { labels, counts } = this.commonService.getTop5SortedLabelsAndCounts(
+      data,
+      (userId) =>
+        users.find((c) => c.user_id.toString() === userId)?.user.user_name ?? ''
     );
-    const counts: number[] = Object.entries(data).map((x) => x[1]);
-    const barChartData: ChartDataset[] = [{ data: counts, label: 'Entries' }];
 
+    const barChartData: ChartDataset[] = [{ data: counts, label: 'Entries' }];
     const barChartConfig: CommonChart = {
       title: 'Entries by User',
-      subtitle: 'Find the user with the highest posting frequency',
+      subtitle: 'Top 5 posting frequency',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined
+      width: undefined,
     };
     return barChartConfig;
   }
@@ -183,7 +190,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   private createMiniCardData(
     courses: Course[],
     enrollments: EnrollmentDetails[],
-    topics: Topic[]
+    topics: TopicDetails[]
   ): MiniCard[] {
     return [
       {
@@ -193,8 +200,8 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
         link: () => this.toggleChart('course'),
       },
       {
-        title: 'Active Topics',
-        value: topics.filter((topic) => topic.topic_state === 'active').length,
+        title: 'Topics',
+        value: topics.length,
         icon: 'forum',
         link: () => this.toggleChart('topics'),
       },
@@ -212,25 +219,32 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       link: stat.link,
     }));
   }
-
   private createEnrollmentChartStats(
     courses: Course[],
     enrollments: Enrollment[]
   ): CommonChart {
-    const labels = courses.map((course) => course.course_name);
-    const counts = courses.map(
-      (course) =>
-        enrollments.filter(
-          (e) =>
-            e.course_id === course.course_id &&
-            e.enrollment_state === 'active' &&
-            e.enrollment_type == 'student'
-        ).length
+    const data: { [key: string]: number } = courses.reduce((acc, course) => {
+      const enrollmentCount = enrollments.filter(
+        (e) =>
+          e.course_id === course.course_id &&
+          e.enrollment_state === 'active' &&
+          e.enrollment_type === 'student'
+      ).length;
+      acc[course.course_id.toString()] = enrollmentCount;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    const { labels, counts } = this.commonService.getTop5SortedLabelsAndCounts(
+      data,
+      (courseId) =>
+        courses.find((c) => c.course_id.toString() === courseId)?.course_name ??
+        ''
     );
 
     const barChartData: ChartDataset[] = [
       { data: counts, label: 'Student Enrollments' },
     ];
+
     return {
       title: 'Student Enrollments by Course',
       subtitle: 'Number of enrollment per course',
@@ -240,36 +254,36 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '50vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined
+      width: undefined,
     };
   }
 
-  private createStudentChartStats(users: EnrollmentDetails[]): CommonChart {
-    const activeUsers = users.filter(
-      (user) => user.user.user_state === 'active'
-    ).length;
-    const deletedUsers = users.filter(
-      (user) => user.user.user_state === 'deleted'
-    ).length;
+  // private createStudentChartStats(users: EnrollmentDetails[]): CommonChart {
+  //   const activeUsers = users.filter(
+  //     (user) => user.user.user_state === 'active'
+  //   ).length;
+  //   const deletedUsers = users.filter(
+  //     (user) => user.user.user_state === 'deleted'
+  //   ).length;
 
-    const labels = ['Active', 'Deleted'];
-    const data = [activeUsers, deletedUsers];
-    const barChartData: ChartDataset[] = [
-      { data: data.filter((count) => count > 0), label: 'Users' },
-    ];
+  //   const labels = ['Active', 'Deleted'];
+  //   const data = [activeUsers, deletedUsers];
+  //   const barChartData: ChartDataset[] = [
+  //     { data: data.filter((count) => count > 0), label: 'Users' },
+  //   ];
 
-    return {
-      title: 'User Status Distribution',
-      subtitle: 'No idea',
-      barChartLabels: labels,
-      barChartData,
-      barChartType: 'pie',
-      barChartLegend: true,
-      height: '20vh',
-      maxValue: this.getMaxValue(barChartData),
-      width: undefined
-    };
-  }
+  //   return {
+  //     title: 'User Status Distribution',
+  //     subtitle: 'No idea',
+  //     barChartLabels: labels,
+  //     barChartData,
+  //     barChartType: 'pie',
+  //     barChartLegend: true,
+  //     height: '20vh',
+  //     maxValue: this.getMaxValue(barChartData),
+  //     width: undefined,
+  //   };
+  // }
 
   private createTopicCommonChartStats(
     courses: Course[],
@@ -285,17 +299,25 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   }
 
   private getTopicsPerCourse(courses: Course[], topics: Topic[]): CommonChart {
-    const labels = courses.map((course) => course.course_name);
-    const counts = courses.map(
-      (course) =>
-        topics.filter(
-          (topic) =>
-            topic.course_id === course.course_id &&
-            topic.topic_deleted_at != 'NA'
-        ).length
+    const data: { [key: string]: number } = courses.reduce((acc, course) => {
+      const topicCount = topics.filter(
+        (topic) =>
+          topic.course_id === course.course_id &&
+          topic.topic_deleted_at !== 'NA'
+      ).length;
+      acc[course.course_id.toString()] = topicCount;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    const { labels, counts } = this.commonService.getTop5SortedLabelsAndCounts(
+      data,
+      (courseId) =>
+        courses.find((c) => c.course_id.toString() === courseId)?.course_name ??
+        ''
     );
 
     const barChartData: ChartDataset[] = [{ data: counts, label: 'Topics' }];
+
     return {
       title: 'Topics per Course',
       subtitle: 'Number of topics created per course',
@@ -305,10 +327,9 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined
+      width: undefined,
     };
   }
-
   private getTopicsOverTime(topics: Topic[]): CommonChart {
     const topicsByMonth: { [key: string]: number } = {};
     topics.forEach((topic) => {
@@ -340,7 +361,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined
+      width: undefined,
     };
   }
 
@@ -379,31 +400,31 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     users: EnrollmentDetails[],
     topics: Topic[]
   ): CommonChart {
-    const topicsPerUser: { [key: number]: number } = {};
-    topics.forEach((topic) => {
-      const userId = topic.topic_posted_by_user_id;
-      topicsPerUser[userId] = (topicsPerUser[userId] || 0) + 1;
-    });
+    var data: { [key: string]: number } = topics
+      .filter((x) => x.topic_state == 'active')
+      .reduce((previousVal: any, currentVal) => {
+        const groupValue = currentVal['topic_posted_by_user_id'];
+        previousVal[groupValue] = (previousVal[groupValue] || 0) + 1;
+        return previousVal;
+      }, {} as { [key: string]: number });
 
-    const filteredUsers = users.filter((user) => topicsPerUser[user.user_id]);
-    const labels = filteredUsers.map(
-      (user) => user.user.user_name || `User ${user.user_id}`
+    const { labels, counts } = this.commonService.getTop5SortedLabelsAndCounts(
+      data,
+      (userId) =>
+        users.find((c) => c.user_id.toString() === userId)?.user.user_name ?? ''
     );
-    const data = filteredUsers.map((user) => topicsPerUser[user.user_id] || 0);
-    const barChartData: ChartDataset[] = [
-      { data: labels.length ? data : [0], label: 'Topics' },
-    ];
+    const barChartData: ChartDataset[] = [{ data: counts, label: 'Topics' }];
 
     return {
-      title: 'Topics by User',
-      subtitle: 'Find the user with the highest posting frequency',
+      title: 'Active Topics by User',
+      subtitle: 'Top 5 posting frequency',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined
+      width: undefined,
     };
   }
 

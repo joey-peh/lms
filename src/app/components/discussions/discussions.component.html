@@ -3,21 +3,33 @@
   <div>
     <div>
       <h3>Topics</h3>
-      <table mat-table [dataSource]="topicList.dataSource">
+      <table
+        mat-table
+        [dataSource]="topicList.dataSource"
+        matSort
+        (matSortChange)="sortData($event, 'topics')"
+      >
         <!-- Existing Columns -->
         <ng-container
           *ngFor="let column of topicList.columnConfigs"
           [matColumnDef]="column.columnDef"
         >
-          <th mat-header-cell *matHeaderCellDef>
-            <ng-container *ngIf="column.columnDef !== 'action'">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            [mat-sort-header]="column.columnDef"
+            [disabled]="column.columnDef === 'action'"
+          >
+            <ng-container
+              *ngIf="column.columnDef !== 'action'"
+            >
               {{ column.displayName }}
               <input
                 class="form-control"
                 matInput
                 (keyup)="applyFilter($event, column.columnDef)"
                 [placeholder]="'Filter by ' + column.displayName"
-                style="margin: 5px 0;"
+                style="margin: 5px 0"
               />
             </ng-container>
           </th>
@@ -30,7 +42,11 @@
                 mat-icon-button
                 color="warn"
                 (click)="deleteTopic(element)"
-                *ngIf="element.topic_state !== 'deleted'"
+                *ngIf="
+                  element.topic_state !== 'deleted' &&
+                  (element.topic_posted_by_user_id == user.user_id ||
+                    user.role === 'admin')
+                "
               >
                 <mat-icon>delete</mat-icon>
               </button>
@@ -59,12 +75,17 @@
 
     <div *ngIf="entry.dataSource.data.length > 0">
       <h3 style="padding-top: 10px">Entries</h3>
-      <table mat-table [dataSource]="entry.dataSource">
+      <table
+        mat-table
+        [dataSource]="entry.dataSource"
+        matSort
+        (matSortChange)="sortData($event, 'entries')"
+      >
         <ng-container
           *ngFor="let column of entry.columnConfigs"
           [matColumnDef]="column.columnDef"
         >
-          <th mat-header-cell *matHeaderCellDef>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
             {{ column.displayName }}
           </th>
           <td mat-cell *matCellDef="let element">

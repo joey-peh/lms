@@ -32,6 +32,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
+import { MatSortModule } from '@angular/material/sort';
 
 @NgModule({
   declarations: [
@@ -63,6 +64,7 @@ import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dial
     MatPaginatorModule,
     MatFormFieldModule,
     MatDialogModule,
+    MatSortModule,
   ],
   providers: [
     provideCharts(withDefaultRegisterables()),
