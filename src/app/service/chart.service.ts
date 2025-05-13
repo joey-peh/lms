@@ -173,7 +173,7 @@ export class ChartService {
       width: undefined,
     };
   }
-  
+
   getEngagementByCourse(
     topicsWithDetails: TopicDetails[],
     courses: Course[],
@@ -212,7 +212,6 @@ export class ChartService {
         totalByStudent[studentId] = (totalByStudent[studentId] || 0) + count;
       }
     }
-    console.log(totalByStudent);
     // 2. Get top 5 students
     const topStudentIds = Object.entries(totalByStudent)
       .sort(([, a], [, b]) => b - a)
@@ -238,72 +237,6 @@ export class ChartService {
       barChartType: 'bar',
       barChartLegend: true,
       height: '20vh',
-      maxValue: this.getMaxValue(barChartData),
-      width: undefined,
-    };
-  }
-
-  getStackedParticipationChart(
-    topicsWithDetails: TopicDetails[],
-    users: EnrollmentDetails[]
-  ): CommonChart {
-    const engagementByMonth: { [month: string]: { [userId: string]: number } } =
-      {};
-
-    // Step 1: Aggregate entries per month per student
-    for (const topic of topicsWithDetails) {
-      for (const entry of topic.entries) {
-        const dateStr = entry.entry_created_at;
-        const userId = entry.entry_posted_by_user_id.toString();
-
-        if (!dateStr || dateStr === 'N/A') continue;
-
-        const date = new Date(
-          dateStr.split(', ')[0].split('/').reverse().join('-')
-        ); // dd/MM/yyyy
-        if (isNaN(date.getTime())) continue;
-
-        const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1)
-          .toString()
-          .padStart(2, '0')}`;
-
-        engagementByMonth[monthKey] = engagementByMonth[monthKey] || {};
-        engagementByMonth[monthKey][userId] =
-          (engagementByMonth[monthKey][userId] || 0) + 1;
-      }
-    }
-
-    const usersById: Record<string, string> = {};
-    users.forEach((u) => (usersById[u.user_id.toString()] = u.user.user_name));
-
-    // Step 2: Sort and extract labels (months)
-    const sortedMonths = Object.keys(engagementByMonth).sort();
-    const userIds = Object.keys(usersById);
-
-    // Step 3: Build barChartData per user (stacked)
-    const barChartData: ChartDataset[] = userIds
-      .map((userId) => {
-        const data = sortedMonths.map(
-          (month) => engagementByMonth[month]?.[userId] || 0
-        );
-        const isAllZero = data.every((count) => count === 0);
-        if (isAllZero) return null; // Filter out students with no participation
-        return {
-          data,
-          label: usersById[userId],
-          stack: 'participation', // Enable stacking
-        };
-      })
-      .filter(Boolean) as ChartDataset[];
-
-    return {
-      title: 'Student Participation Over Time',
-      subtitle: 'Stacked by Student',
-      barChartLabels: sortedMonths.length ? sortedMonths : ['No Data'],
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: '30vh',
       maxValue: this.getMaxValue(barChartData),
       width: undefined,
     };

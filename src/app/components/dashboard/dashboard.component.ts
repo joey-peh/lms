@@ -4,30 +4,25 @@ import {
   Component,
   inject,
   OnInit,
+  QueryList,
   ViewChild,
+  ViewChildren,
 } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { ChartDataset, ChartType } from 'chart.js';
-import {
-  Course,
-  Topic,
-  Enrollment,
-  User,
-  TableDetails,
-} from '../../models/lms-models';
+import { Course, TableDetails } from '../../models/lms-models';
 import {
   EnrollmentDetails,
-  EntryDetails,
   TopicDetails,
 } from '../../service/csv-data-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
-import { CommonService } from '../../service/common-service.service';
 import { ChartService } from '../../service/chart.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
+import { TableRow } from '../base/common-table/common-table.component';
 
 interface MiniCard {
   title: string;
@@ -48,27 +43,17 @@ export interface CommonChart {
   maxValue: number;
 }
 
-export interface ParticipationRow {
-  name: string;
-  [key: string]: string | number; // dynamic keys for each month
-}
-
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   standalone: false,
 })
-export class DashboardComponent
-  extends BaseUserComponent
-  implements OnInit, AfterViewInit
-{
+export class DashboardComponent extends BaseUserComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private store = inject(CsvDataStoreService);
   private cdr = inject(ChangeDetectorRef);
   private chartService = inject(ChartService);
-
-  @ViewChild(MatPaginator, { static: false }) paginator!: MatPaginator;
 
   courses$ = this.store.getCourses();
 
@@ -76,6 +61,7 @@ export class DashboardComponent
   topicData$: Observable<CommonChart[]>;
   entryData$: Observable<CommonChart[]>;
   enrollmentData$: Observable<CommonChart>;
+  tableData$: Observable<TableDetails<TableRow>[]>;
 
   show = { course: false, students: false, topics: false, entries: false };
 
@@ -87,12 +73,6 @@ export class DashboardComponent
       largeCard: { cols: matches ? 1 : 4, rows: 4 },
     }))
   );
-
-  participationData: TableDetails<ParticipationRow> = {
-    dataSource: new MatTableDataSource<ParticipationRow>([]),
-    columnConfigs: [],
-    displayedColumns: [],
-  };
 
   constructor() {
     super();
@@ -149,114 +129,153 @@ export class DashboardComponent
         this.chartService.createEnrollmentChartStats(courses, enrollments)
       )
     );
-  }
 
+    this.tableData$ = combineLatest([
+      this.store.getTopicDetails(),
+      this.store.getEnrollmentDetails(),
+    ]).pipe(
+      map(([topics, enrollments]) => {
+        return [
+          this.buildParticipationTable(topics, enrollments),
+          this.buildZeroParticipationTable(topics, enrollments),
+        ];
+      })
+    );
+  }
   override ngOnInit(): void {
     super.ngOnInit();
     this.store.loadData();
-
-    combineLatest([
-      this.store.getTopicDetails(),
-      this.store.getEnrollmentDetails(),
-    ]).subscribe(([topics, enrollments]) => {
-      const participationTable = this.getParticipationTable(
-        topics,
-        enrollments
-      );
-
-      // Build table structure
-      const columns = ['name', ...participationTable.headers.slice(1)];
-      this.participationData.displayedColumns = columns;
-
-      this.participationData.columnConfigs = columns.map((col) => ({
-        columnDef: col,
-        displayName: col === 'name' ? 'Student Name' : col,
-        cell: (row: ParticipationRow) => `${row[col] ?? ''}`,
-        sortable: false,
-        filterable: false,
-      }));
-
-      // Convert row objects to ParticipationRow format
-      const tableRows: ParticipationRow[] = participationTable.rows.map(
-        (row) => {
-          const participationRow: ParticipationRow = { name: row.name };
-          participationTable.headers.slice(1).forEach((month, idx) => {
-            participationRow[month] = row.values[idx];
-          });
-          return participationRow;
-        }
-      );
-
-      this.participationData.dataSource =
-        new MatTableDataSource<ParticipationRow>(tableRows);
-
-      this.cdr.markForCheck();
-    });
   }
 
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      this.participationData.dataSource = new MatTableDataSource(
-        this.participationData.dataSource.data
-      );
-      this.participationData.dataSource.paginator = this.paginator;
+  private buildParticipationTable(
+    topics: TopicDetails[],
+    enrollments: EnrollmentDetails[]
+  ): TableDetails<TableRow> {
+    const participationTable = this.getParticipationTable(topics, enrollments);
+
+    const columns = ['name', ...participationTable.headers.slice(1)];
+    var columnConfigs = columns.map((col) => ({
+      columnDef: col,
+      displayName: col === 'name' ? 'Student Name' : col,
+      cell: (row: TableRow) => `${row[col] ?? ''}`,
+      sortable: false,
+      filterable: true,
+    }));
+
+    const tableRows: TableRow[] = participationTable.rows.map((row) => {
+      const rowData: TableRow = { name: row.name };
+      participationTable.headers.slice(1).forEach((month, idx) => {
+        rowData[month] = row.values[idx];
+      });
+      return rowData;
     });
+
+    return {
+      dataSource: new MatTableDataSource(tableRows),
+      columnConfigs: columnConfigs,
+      displayedColumns: columns,
+      title: 'Student Participation'
+    };
+  }
+
+  private buildZeroParticipationTable(
+    topics: TopicDetails[],
+    enrollments: EnrollmentDetails[]
+  ): TableDetails<TableRow> {
+    const displayedColumns = ['name'];
+    const columnConfigs = [
+      {
+        columnDef: 'name',
+        displayName: 'Student Name',
+        cell: (row: { name: string }) => row.name,
+        sortable: false,
+        filterable: false,
+      },
+    ];
+    const zeroStudents = this.getZeroParticipationStudents(topics, enrollments);
+    const data: TableRow[] = zeroStudents.map((name) => ({ name }));
+    return {
+      dataSource: new MatTableDataSource(data),
+      columnConfigs: columnConfigs,
+      displayedColumns: displayedColumns,
+      title: 'Student with Zero Participation'
+    };
+  }
+
+  getZeroParticipationStudents(
+    topicsWithDetails: TopicDetails[],
+    users: EnrollmentDetails[]
+  ): string[] {
+    const participationMap: Record<string, number> = {};
+
+    for (const topic of topicsWithDetails) {
+      for (const entry of topic.entries) {
+        const userId = entry.entry_posted_by_user_id.toString();
+        if (!userId) continue;
+        participationMap[userId] = (participationMap[userId] || 0) + 1;
+      }
+    }
+
+    return users
+      .filter((user) => !participationMap[user.user_id.toString()])
+      .map((user) => user.user.user_name);
   }
 
   getParticipationTable(
     topicsWithDetails: TopicDetails[],
-    users: EnrollmentDetails[]
+    users: EnrollmentDetails[],
+    groupBy: 'course' | 'topic' = 'course' // 👈 you can toggle this
   ): { headers: string[]; rows: { name: string; values: number[] }[] } {
-    const engagementByMonth: { [month: string]: { [userId: string]: number } } =
-      {};
+    const engagementByGroup: {
+      [groupName: string]: { [userId: string]: number };
+    } = {};
 
     for (const topic of topicsWithDetails) {
+      const groupName =
+        groupBy === 'course' ? topic.course.course_name : topic.topic_title;
+
       for (const entry of topic.entries) {
-        const dateStr = entry.entry_created_at;
         const userId = entry.entry_posted_by_user_id.toString();
+        if (!userId || userId === 'N/A') continue;
 
-        if (!dateStr || dateStr === 'N/A') continue;
+        if (!engagementByGroup[groupName]) {
+          engagementByGroup[groupName] = {};
+        }
 
-        const date = new Date(
-          dateStr.split(', ')[0].split('/').reverse().join('-')
-        );
-        if (isNaN(date.getTime())) continue;
-
-        const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1)
-          .toString()
-          .padStart(2, '0')}`;
-
-        engagementByMonth[monthKey] = engagementByMonth[monthKey] || {};
-        engagementByMonth[monthKey][userId] =
-          (engagementByMonth[monthKey][userId] || 0) + 1;
+        engagementByGroup[groupName][userId] =
+          (engagementByGroup[groupName][userId] || 0) + 1;
       }
     }
 
-    // Sort months
-    const sortedMonths = Object.keys(engagementByMonth).sort();
+    // Sort group names
+    const sortedGroupNames = Object.keys(engagementByGroup).sort();
 
     // Map users by ID
     const usersById: Record<string, string> = {};
-    users.forEach(
-      (user) => (usersById[user.user_id.toString()] = user.user.user_name)
-    );
-
-    // Collect all unique userIds from data
-    const allUserIds = new Set<string>();
-    Object.values(engagementByMonth).forEach((monthData) =>
-      Object.keys(monthData).forEach((userId) => allUserIds.add(userId))
-    );
-
-    const rows = Array.from(allUserIds).map((userId) => {
-      const name = usersById[userId] ?? 'Unknown';
-      const values = sortedMonths.map(
-        (month) => engagementByMonth[month]?.[userId] ?? 0
-      );
-      return { name, values };
+    users.forEach((user) => {
+      usersById[user.user_id.toString()] = user.user.user_name;
     });
 
-    const headers = ['Student Name', ...sortedMonths];
+    // Collect all user IDs
+    const allUserIds = new Set<string>();
+    Object.values(engagementByGroup).forEach((groupData) => {
+      Object.keys(groupData).forEach((userId) => allUserIds.add(userId));
+    });
 
+    const rows = Array.from(allUserIds)
+      .map((userId) => {
+        const name = usersById[userId] ?? 'Unknown';
+        const values = sortedGroupNames.map(
+          (group) => engagementByGroup[group]?.[userId] ?? 0
+        );
+        const total = values.reduce((sum, val) => sum + val, 0);
+        return { name, values: [...values, total] };
+      })
+      .sort(
+        (a, b) => b.values[b.values.length - 1] - a.values[a.values.length - 1]
+      );
+
+    const headers = ['Student Name', ...sortedGroupNames, 'Total'];
     return { headers, rows };
   }
 

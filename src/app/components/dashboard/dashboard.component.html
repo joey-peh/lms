@@ -39,66 +39,35 @@
       ></ng-container>
     </div>
 
-    <div>
-      <ng-container *ngIf="show.entries">
-        <mat-grid-tile
-          *ngFor="let topicStat of entryData$ | async"
-          [colspan]="(cardLayout | async)?.midCard?.cols"
-          [rowspan]="(cardLayout | async)?.midCard?.rows"
-        >
-          <app-card [title]="topicStat.title" [subtitle]="topicStat.subtitle">
-            <app-common-chart
-              [height]="topicStat.height"
-              [width]="topicStat.width"
-              [barChartLabels]="topicStat.barChartLabels"
-              [barChartData]="topicStat.barChartData"
-              [barChartType]="topicStat.barChartType"
-              [barChartLegend]="topicStat.barChartLegend"
-              [maxValue]="topicStat.maxValue"
-            ></app-common-chart>
-          </app-card> </mat-grid-tile
-      ></ng-container>
-      <mat-grid-tile [hidden]="!show.entries" [colspan]="4" [rowspan]="4">
+    <div *ngIf="show.entries">
+      <mat-grid-tile
+        *ngFor="let topicStat of entryData$ | async"
+        [colspan]="(cardLayout | async)?.midCard?.cols"
+        [rowspan]="(cardLayout | async)?.midCard?.rows"
+      >
+        <app-card [title]="topicStat.title" [subtitle]="topicStat.subtitle">
+          <app-common-chart
+            [height]="topicStat.height"
+            [width]="topicStat.width"
+            [barChartLabels]="topicStat.barChartLabels"
+            [barChartData]="topicStat.barChartData"
+            [barChartType]="topicStat.barChartType"
+            [barChartLegend]="topicStat.barChartLegend"
+            [maxValue]="topicStat.maxValue"
+          ></app-common-chart>
+        </app-card>
+      </mat-grid-tile>
+      <mat-grid-tile
+        *ngFor="let participationData of tableData$ | async"
+        [colspan]="(cardLayout | async)?.largeCard?.cols"
+        [rowspan]="(cardLayout | async)?.largeCard?.rows"
+      >
         <app-card
-          title="Student Participation Over Time"
+          [title]="participationData.title"
           class="participation-card"
           style="margin-top: 20px"
         >
-          <div class="mat-elevation-z8">
-            <table
-              mat-table
-              [dataSource]="participationData.dataSource"
-              class="full-width-table"
-            >
-              <ng-container
-                *ngFor="let column of participationData.columnConfigs"
-                [matColumnDef]="column.columnDef"
-              >
-                <th mat-header-cell *matHeaderCellDef>
-                  {{ column.displayName }}
-                </th>
-                <td mat-cell *matCellDef="let row">{{ column.cell(row) }}</td>
-              </ng-container>
-
-              <tr
-                mat-header-row
-                *matHeaderRowDef="participationData.displayedColumns"
-              ></tr>
-              <tr
-                mat-row
-                *matRowDef="
-                  let row;
-                  columns: participationData.displayedColumns
-                "
-              ></tr>
-            </table>
-            <mat-paginator
-              [pageSizeOptions]="[10, 15, 20]"
-              showFirstLastButtons
-              aria-label="Select pages"
-            >
-            </mat-paginator>
-          </div>
+          <app-common-table [tableData]="participationData"></app-common-table>
         </app-card>
       </mat-grid-tile>
     </div>

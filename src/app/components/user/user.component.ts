@@ -1,6 +1,5 @@
 import {
   AfterViewInit,
-  ChangeDetectorRef,
   Component,
   inject,
   OnInit,
@@ -13,9 +12,9 @@ import { TableDetails } from '../../models/lms-models';
 import { EnrollmentDetails } from '../../service/csv-data-service.service';
 import { Observable } from 'rxjs';
 import { CommonService } from '../../service/common-service.service';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
-import { MatDialog } from '@angular/material/dialog';
 import { BaseUserComponent } from '../base/base-user.component';
+import { ConfirmDialogComponent } from '../base/confirm-dialog/confirm-dialog.component';
+import { TableRow } from '../base/common-table/common-table.component';
 
 @Component({
   selector: 'app-user',
@@ -23,20 +22,18 @@ import { BaseUserComponent } from '../base/base-user.component';
   templateUrl: './user.component.html',
   styleUrl: './user.component.css',
 })
-export class UserComponent
-  extends BaseUserComponent
-  implements OnInit, AfterViewInit
-{
+export class UserComponent extends BaseUserComponent implements OnInit {
   private store = inject(CsvDataStoreService);
   private commonService = inject(CommonService);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   enrollmentData$!: Observable<EnrollmentDetails[]>;
-  userData: TableDetails<EnrollmentDetails> = {
-    dataSource: new MatTableDataSource<EnrollmentDetails>([]),
+  userData: TableDetails<TableRow> = {
+    dataSource: new MatTableDataSource<TableRow>([]),
     columnConfigs: [],
     displayedColumns: [],
+    title: '',
   };
 
   override ngOnInit(): void {
@@ -73,18 +70,14 @@ export class UserComponent
         });
         displayedColumns.push('action');
       }
+
       this.userData.dataSource.data = studentEnrollment;
       this.userData.columnConfigs = columnConfigs;
       this.userData.displayedColumns = displayedColumns;
     });
   }
 
-  ngAfterViewInit(): void {
-    this.userData.dataSource.paginator = this.paginator;
-    this.paginator.page.subscribe((event: PageEvent) => {});
-  }
-
-  deleteEnrollment(enrollment: EnrollmentDetails) {
+  deleteEnrollment = (enrollment: EnrollmentDetails) => {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         message: `Are you sure you want to delete ${enrollment.user.user_name}'s enrollment?`,
@@ -102,5 +95,5 @@ export class UserComponent
         });
       }
     });
-  }
+  };
 }

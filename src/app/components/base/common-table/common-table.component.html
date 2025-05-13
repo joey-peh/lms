@@ -1,0 +1,50 @@
+<div class="mat-elevation-z8">
+  <table mat-table [dataSource]="tableData.dataSource" class="full-width-table">
+    <ng-container
+      *ngFor="let column of tableData.columnConfigs"
+      [matColumnDef]="column.columnDef"
+      ><th mat-header-cell *matHeaderCellDef>
+        <ng-container *ngIf="column.columnDef !== 'action'">
+          {{ column.displayName }}
+          <input
+            class="form-control"
+            matInput
+            (keyup)="applyFilter($event, column.columnDef)"
+            [placeholder]="'Filter by ' + column.displayName"
+            style="margin: 5px 0"
+          />
+        </ng-container>
+      </th>
+      <td mat-cell *matCellDef="let element">
+        <ng-container
+          *ngIf="
+            column.columnDef === 'action' && showDeleteButton;
+            else regularCell
+          "
+        >
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="delete(element)"
+            *ngIf="element.enrollment_state !== 'deleted'"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </ng-container>
+        <ng-template #regularCell>
+          {{ column.cell(element) }}
+        </ng-template>
+      </td></ng-container
+    >
+
+    <tr mat-header-row *matHeaderRowDef="tableData.displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: tableData.displayedColumns"></tr>
+  </table>
+  <mat-paginator
+    #paginator
+    [pageSizeOptions]="[10, 15, 20]"
+    showFirstLastButtons
+    aria-label="Select pages"
+  >
+  </mat-paginator>
+</div>

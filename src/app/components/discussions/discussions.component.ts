@@ -18,7 +18,7 @@ import {
 } from '../../service/csv-data-service.service';
 import { CommonService } from '../../service/common-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../base/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-discussions',
@@ -40,12 +40,14 @@ export class DiscussionsComponent
     dataSource: new MatTableDataSource<TopicDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
+    title: '',
   };
 
   entry: TableDetails<EntryDetails> = {
     dataSource: new MatTableDataSource<EntryDetails>([]),
     columnConfigs: [],
     displayedColumns: [],
+    title: '',
   };
 
   columnFilters: { [key: string]: string } = {};
@@ -229,6 +231,7 @@ export class DiscussionsComponent
               dataSource: new MatTableDataSource<EntryDetails>([]),
               columnConfigs: [],
               displayedColumns: [],
+              title: '',
             };
             this.cdr.markForCheck();
           });
@@ -238,72 +241,86 @@ export class DiscussionsComponent
   }
 
   sortData(sort: Sort, table: 'topics' | 'entries'): void {
-  if (table === 'topics') {
-    const dataSource = this.topicList.dataSource as MatTableDataSource<TopicDetails>;
-    const topicsData = dataSource.data as TopicDetails[];
+    if (table === 'topics') {
+      const dataSource = this.topicList
+        .dataSource as MatTableDataSource<TopicDetails>;
+      const topicsData = dataSource.data as TopicDetails[];
 
-    if (!sort.active || sort.direction === '') {
-      this.configureDiscussionTable(topicsData);
-      this.cdr.markForCheck();
-      return;
+      if (!sort.active || sort.direction === '') {
+        this.configureDiscussionTable(topicsData);
+        this.cdr.markForCheck();
+        return;
+      }
+
+      dataSource.data = topicsData
+        .slice()
+        .sort((a: TopicDetails, b: TopicDetails) => {
+          const isAsc = sort.direction === 'asc';
+          const valueA = dataSource.sortingDataAccessor(a, sort.active);
+          const valueB = dataSource.sortingDataAccessor(b, sort.active);
+
+          if (valueA == null || valueB == null) {
+            return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
+          }
+
+          if (typeof valueA === 'string' && typeof valueB === 'string') {
+            return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
+          }
+
+          const numA =
+            typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
+          const numB =
+            typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
+
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
+          }
+
+          return (
+            String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1)
+          );
+        });
+    } else {
+      const dataSource = this.entry
+        .dataSource as MatTableDataSource<EntryDetails>;
+      const entriesData = dataSource.data as EntryDetails[];
+
+      if (!sort.active || sort.direction === '') {
+        dataSource.data = entriesData.slice();
+        this.cdr.markForCheck();
+        return;
+      }
+
+      dataSource.data = entriesData
+        .slice()
+        .sort((a: EntryDetails, b: EntryDetails) => {
+          const isAsc = sort.direction === 'asc';
+          const valueA = dataSource.sortingDataAccessor(a, sort.active);
+          const valueB = dataSource.sortingDataAccessor(b, sort.active);
+
+          if (valueA == null || valueB == null) {
+            return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
+          }
+
+          if (typeof valueA === 'string' && typeof valueB === 'string') {
+            return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
+          }
+
+          const numA =
+            typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
+          const numB =
+            typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
+
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
+          }
+
+          return (
+            String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1)
+          );
+        });
     }
 
-    dataSource.data = topicsData.slice().sort((a: TopicDetails, b: TopicDetails) => {
-      const isAsc = sort.direction === 'asc';
-      const valueA = dataSource.sortingDataAccessor(a, sort.active);
-      const valueB = dataSource.sortingDataAccessor(b, sort.active);
-
-      if (valueA == null || valueB == null) {
-        return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
-      }
-
-      if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
-      }
-
-      const numA = typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
-      const numB = typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
-
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
-      }
-
-      return String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1);
-    });
-  } else {
-    const dataSource = this.entry.dataSource as MatTableDataSource<EntryDetails>;
-    const entriesData = dataSource.data as EntryDetails[];
-
-    if (!sort.active || sort.direction === '') {
-      dataSource.data = entriesData.slice();
-      this.cdr.markForCheck();
-      return;
-    }
-
-    dataSource.data = entriesData.slice().sort((a: EntryDetails, b: EntryDetails) => {
-      const isAsc = sort.direction === 'asc';
-      const valueA = dataSource.sortingDataAccessor(a, sort.active);
-      const valueB = dataSource.sortingDataAccessor(b, sort.active);
-
-      if (valueA == null || valueB == null) {
-        return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
-      }
-
-      if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
-      }
-
-      const numA = typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
-      const numB = typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
-
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
-      }
-
-      return String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1);
-    });
+    this.cdr.markForCheck();
   }
-
-  this.cdr.markForCheck();
-}
 }

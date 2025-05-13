@@ -15,24 +15,25 @@ import { NavComponent } from './components/navigation/navigation.component';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
-import { CardComponent } from './components/card/card.component';
+import { CardComponent } from './components/base/card/card.component';
 import {
   BaseChartDirective,
   provideCharts,
   withDefaultRegisterables,
 } from 'ng2-charts';
 import { provideHttpClient, withFetch } from '@angular/common/http';
-import { MiniCardComponent } from './components/mini-card/mini-card.component';
+import { MiniCardComponent } from './components/base/mini-card/mini-card.component';
 import { UserComponent } from './components/user/user.component';
-import { CommonChartComponent } from './components/common-chart/common-chart.component';
+import { CommonChartComponent } from './components/base/common-chart/common-chart.component';
 import { MatTableModule } from '@angular/material/table';
 import { DatePipe } from '@angular/common';
 import { DiscussionsComponent } from './components/discussions/discussions.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialogModule } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from './components/base/confirm-dialog/confirm-dialog.component';
 import { MatSortModule } from '@angular/material/sort';
+import { CommonTableComponent } from './components/base/common-table/common-table.component';
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import { MatSortModule } from '@angular/material/sort';
     CommonChartComponent,
     DiscussionsComponent,
     ConfirmDialogComponent,
+    CommonTableComponent,
   ],
   imports: [
     BrowserModule,

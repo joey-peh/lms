@@ -66,4 +66,5 @@ export interface TableDetails<T> {
   dataSource: MatTableDataSource<T>;
   columnConfigs: ColumnConfig[];
   displayedColumns: string[];
+  title: string;
 }
