@@ -53,6 +53,7 @@ export class DiscussionsComponent
   };
 
   columnFilters: { [key: string]: string } = {};
+  selectedTopic: any = null; // Track selected topic
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild('topicsSort') topicsSort!: MatSort; // Reference for topics table sort
@@ -129,6 +130,7 @@ export class DiscussionsComponent
     if (row.topic_state !== 'active') {
       return;
     }
+    this.selectedTopic = row;
     const entries = row.entries;
     const { columnConfigs, displayedColumns } =
       this.commonService.configureBaseColumnConfig(
