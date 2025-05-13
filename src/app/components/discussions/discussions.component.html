@@ -73,7 +73,7 @@
       </mat-paginator>
     </div>
 
-    <div *ngIf="entry.dataSource.data.length > 0">
+    <div *ngIf="entry.dataSource.data.length > 0; else noEntry">
       <h3 style="padding-top: 10px">Entries</h3>
       <table
         mat-table
@@ -92,7 +92,7 @@
             {{ column.cell(element) }}
           </td>
         </ng-container>
-        <!-- content -->
+
         <tr mat-header-row *matHeaderRowDef="entry.displayedColumns"></tr>
         <tr
           mat-row
@@ -101,5 +101,12 @@
         ></tr>
       </table>
     </div>
+
+    <ng-template #noEntry>
+      <h3 style="padding-top: 10px">Entries</h3>
+      <p style="text-align: center; padding: 20px; color: gray">
+        No entries found.
+      </p>
+    </ng-template>
   </div>
 </div>
