@@ -1,12 +1,4 @@
-<div
-  class="parent"
-  [ngStyle]="{
-    'height': height,
-    'width': width,
-    'margin-top': barChartType === 'pie' ? '-50px' : '0',
-    'margin-left': barChartType === 'pie' ? '50px' : '0',
-  }"
->
+<div class="chart-container" [style.height]="height" [style.width]="width">
   <canvas
     baseChart
     [data]="{ labels: barChartLabels, datasets: barChartData }"

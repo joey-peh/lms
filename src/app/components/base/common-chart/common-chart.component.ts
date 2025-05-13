@@ -26,6 +26,7 @@ export class CommonChartComponent implements OnInit {
   ngOnInit(): void {
     this.barChartOptions = {
       responsive: true,
+      maintainAspectRatio: false,
       layout: {
         padding: {
           left: 20,
