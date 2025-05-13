@@ -40,7 +40,7 @@ export class CommonChartComponent implements OnInit {
           display: this.displayLabel,
           anchor: 'end',
           align: 'top',
-          color: '#3f51b5',
+          color: 'black',
           formatter: (value) => Math.round(value),
         },
         legend: {

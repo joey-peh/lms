@@ -466,7 +466,7 @@ export class ChartService {
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
-      height: '50vh',
+      height: this.getDynamicVh(720),
       maxValue: this.getMaxValue(barChartData),
     };
   }
