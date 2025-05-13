@@ -123,7 +123,7 @@ export class ChartService {
 
     return {
       title: 'Entries by Students',
-      subtitle: 'Top 5 posting frequency by students',
+      subtitle: 'Top 5 students by number of entries',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -173,49 +173,7 @@ export class ChartService {
       width: undefined,
     };
   }
-  getParticipationByRole(
-    topicsWithDetails: TopicDetails[],
-    users: EnrollmentDetails[]
-  ): CommonChart {
-    const participationData: { student: number; teacher: number } = {
-      student: 0,
-      teacher: 0,
-    };
-
-    // Loop through all entries and count by role
-    for (const topic of topicsWithDetails) {
-      for (const entry of topic.entries) {
-        const role = this.getUserRole(
-          entry.entry_posted_by_user_id.toString(),
-          users
-        ); // Get user role
-        if (role === 'student') {
-          participationData.student++;
-        } else if (role === 'teacher') {
-          participationData.teacher++;
-        }
-      }
-    }
-
-    const barChartData: ChartDataset[] = [
-      {
-        data: [participationData.student, participationData.teacher],
-        label: 'Participation by Role',
-      },
-    ];
-
-    return {
-      title: 'Participation by Role',
-      subtitle: 'Student vs Teacher Participation',
-      barChartLabels: ['Students', 'Teachers'],
-      barChartData,
-      barChartType: 'pie',
-      barChartLegend: true,
-      height: '20vh',
-      maxValue: this.getMaxValue(barChartData),
-      width: undefined,
-    };
-  }
+  
   getEngagementByCourse(
     topicsWithDetails: TopicDetails[],
     courses: Course[],
@@ -645,7 +603,7 @@ export class ChartService {
       subtitle: 'Comparison of entries posted by students vs teachers',
       barChartLabels: ['Students', 'Teachers'],
       barChartData,
-      barChartType: 'bar',
+      barChartType: 'pie',
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),

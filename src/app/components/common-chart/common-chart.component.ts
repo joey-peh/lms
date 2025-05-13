@@ -19,6 +19,8 @@ export class CommonChartComponent implements OnInit {
   @Input() width: string | undefined = '100%';
   @Input() maxValue: number = 0;
 
+  private roundType = ['pie', 'doughnut'];
+
   barChartOptions: ChartOptions = {};
   ngOnInit(): void {
     this.barChartOptions = {
@@ -38,12 +40,16 @@ export class CommonChartComponent implements OnInit {
         //     color: '##3f51b5',
         //     formatter: (value) => value,
         //   },
-        legend: { position: this.barChartType == 'pie' ? 'right' : 'top' },
+        legend: {
+          position: this.roundType.includes(this.barChartType)
+            ? 'right'
+            : 'top',
+        },
       },
     };
 
     if (this.barChartData.length > 2) {
-      if (this.barChartType == 'pie') {
+      if (this.roundType.includes(this.barChartType)) {
         this.barChartOptions.scales = {
           y: {
             beginAtZero: true,

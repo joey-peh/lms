@@ -39,10 +39,10 @@
       ></ng-container>
     </div>
 
-    <div *ngIf="show.entries">
-      <ng-container *ngIf="entryData$ | async as topicData">
+    <div>
+      <ng-container *ngIf="show.entries">
         <mat-grid-tile
-          *ngFor="let topicStat of topicData"
+          *ngFor="let topicStat of entryData$ | async"
           [colspan]="(cardLayout | async)?.midCard?.cols"
           [rowspan]="(cardLayout | async)?.midCard?.rows"
         >
@@ -58,7 +58,7 @@
             ></app-common-chart>
           </app-card> </mat-grid-tile
       ></ng-container>
-      <mat-grid-tile [colspan]="4" [rowspan]="10">
+      <mat-grid-tile [hidden]="!show.entries" [colspan]="4" [rowspan]="4">
         <app-card
           title="Student Participation Over Time"
           class="participation-card"
@@ -92,6 +92,12 @@
                 "
               ></tr>
             </table>
+            <mat-paginator
+              [pageSizeOptions]="[10, 15, 20]"
+              showFirstLastButtons
+              aria-label="Select pages"
+            >
+            </mat-paginator>
           </div>
         </app-card>
       </mat-grid-tile>

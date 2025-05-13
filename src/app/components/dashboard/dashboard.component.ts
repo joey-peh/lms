@@ -1,4 +1,11 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  inject,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -20,6 +27,7 @@ import { BaseUserComponent } from '../base/base-user.component';
 import { CommonService } from '../../service/common-service.service';
 import { ChartService } from '../../service/chart.service';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
 
 interface MiniCard {
   title: string;
@@ -51,11 +59,16 @@ export interface ParticipationRow {
   styleUrl: './dashboard.component.css',
   standalone: false,
 })
-export class DashboardComponent extends BaseUserComponent implements OnInit {
+export class DashboardComponent
+  extends BaseUserComponent
+  implements OnInit, AfterViewInit
+{
   private breakpointObserver = inject(BreakpointObserver);
   private store = inject(CsvDataStoreService);
   private cdr = inject(ChangeDetectorRef);
   private chartService = inject(ChartService);
+
+  @ViewChild(MatPaginator, { static: false }) paginator!: MatPaginator;
 
   courses$ = this.store.getCourses();
 
@@ -117,10 +130,10 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     ]).pipe(
       map(([courses, users, topicDetails]) => {
         var commonChartList: CommonChart[] = [
-          this.chartService.getEngagementByCourse(topicDetails, courses, users),
-          this.chartService.getDiscussionActivityOverTime(topicDetails),
           this.chartService.getEntriesByRole(topicDetails, users),
           this.chartService.getEntriesByStudent(topicDetails, users),
+          this.chartService.getEngagementByCourse(topicDetails, courses, users),
+          this.chartService.getDiscussionActivityOverTime(topicDetails),
           this.chartService.getEntriesOverTime(topicDetails),
           this.chartService.getEntriesPerCourse(topicDetails, courses, users),
         ];
@@ -178,6 +191,15 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
         new MatTableDataSource<ParticipationRow>(tableRows);
 
       this.cdr.markForCheck();
+    });
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.participationData.dataSource = new MatTableDataSource(
+        this.participationData.dataSource.data
+      );
+      this.participationData.dataSource.paginator = this.paginator;
     });
   }
 
