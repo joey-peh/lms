@@ -1,3 +1,6 @@
-<div>
-  <app-common-table [tableData]="userData" [deleteFn]="deleteEnrollment"></app-common-table>
-</div>
+<app-card [title]="userData.title" [subtitle]="userData.subtitle">
+  <app-common-table
+    [tableData]="userData"
+    [deleteFn]="deleteEnrollment"
+  ></app-common-table>
+</app-card>

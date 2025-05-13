@@ -18,6 +18,7 @@ export class CommonChartComponent implements OnInit {
   @Input() height = '30vh';
   @Input() width: string | undefined = '100%';
   @Input() maxValue: number = 0;
+  @Input() displayLabel: boolean = true;
 
   private roundType = ['pie', 'doughnut'];
 
@@ -34,12 +35,13 @@ export class CommonChartComponent implements OnInit {
         },
       },
       plugins: {
-        //   datalabels: {
-        //     anchor: 'end',
-        //     align: 'top',
-        //     color: '##3f51b5',
-        //     formatter: (value) => value,
-        //   },
+        datalabels: {
+          display: this.displayLabel,
+          anchor: 'end',
+          align: 'top',
+          color: '#3f51b5',
+          formatter: (value) => Math.round(value),
+        },
         legend: {
           position: this.roundType.includes(this.barChartType)
             ? 'right'
@@ -48,27 +50,27 @@ export class CommonChartComponent implements OnInit {
       },
     };
 
-    if (this.barChartData.length > 2) {
-      if (this.roundType.includes(this.barChartType)) {
-        this.barChartOptions.scales = {
+    this.barChartOptions.scales = this.roundType.includes(this.barChartType)
+      ? {}
+      : {
           y: {
             beginAtZero: true,
             max: this.maxValue,
           },
         };
-      } else {
-        this.barChartOptions = {
-          ...this.barChartOptions,
-          scales: {
-            x: {
-              stacked: true,
-            },
-            y: {
-              stacked: true,
-            },
+
+    if (this.barChartData.length > 2) {
+      this.barChartOptions = {
+        ...this.barChartOptions,
+        scales: {
+          x: {
+            stacked: true,
           },
-        };
-      }
+          y: {
+            stacked: true,
+          },
+        },
+      };
     }
   }
 }

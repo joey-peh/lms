@@ -34,13 +34,14 @@ export class UserComponent extends BaseUserComponent implements OnInit {
     columnConfigs: [],
     displayedColumns: [],
     title: '',
+    subtitle: ''
   };
 
   override ngOnInit(): void {
     super.ngOnInit();
     this.enrollmentData$ = this.store.getEnrollmentDetails();
     this.enrollmentData$.subscribe((enrollment) => {
-      const studentEnrollment = this.getEnrollment(enrollment, true);
+      const studentEnrollment = this.filterEnrolmentList(enrollment, true);
       var { columnConfigs, displayedColumns } =
         this.commonService.configureBaseColumnConfig(
           studentEnrollment,
@@ -71,6 +72,8 @@ export class UserComponent extends BaseUserComponent implements OnInit {
         displayedColumns.push('action');
       }
 
+      this.userData.title = this.user.role == 'admin' ? 'Active Enrollments' : 'Active Students';
+      this.userData.subtitle = this.user.role == 'admin' ? 'Get list of all enrollments' : 'Get list of active student enrollments under instructor';
       this.userData.dataSource.data = studentEnrollment;
       this.userData.columnConfigs = columnConfigs;
       this.userData.displayedColumns = displayedColumns;
@@ -89,7 +92,7 @@ export class UserComponent extends BaseUserComponent implements OnInit {
         this.store.deleteEnrollment(enrollment).subscribe(() => {
           this.enrollmentData$ = this.store.getEnrollmentDetails();
           this.enrollmentData$.subscribe((enrollments) => {
-            const studentEnrollment = this.getEnrollment(enrollments, true);
+            const studentEnrollment = this.filterEnrolmentList(enrollments, true);
             this.userData.dataSource.data = studentEnrollment;
           });
         });

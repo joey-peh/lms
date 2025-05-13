@@ -81,7 +81,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
 
@@ -130,7 +129,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
 
@@ -170,7 +168,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue([{ data }]),
-      width: undefined,
     };
   }
 
@@ -238,7 +235,7 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
+      displayLabel: false
     };
   }
 
@@ -289,7 +286,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
   getTopicsOverTime(topics: Topic[]): CommonChart {
@@ -338,7 +334,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
 
@@ -350,20 +345,27 @@ export class ChartService {
       deleted: topics.filter((topic) => topic.topic_state === 'deleted').length,
     };
 
-    const labels = ['Active', 'Unpublished', 'Deleted'];
-    const data = [
+    const rawLabels = ['Active', 'Unpublished', 'Deleted'];
+    const rawData = [
       stateCounts.active,
       stateCounts.unpublished,
       stateCounts.deleted,
     ];
-    const barChartData: ChartDataset[] = [
-      { data: data.filter((count) => count > 0), label: 'Topics' },
-    ];
+
+    // Filter out labels and data where count is 0
+    const filtered = rawLabels
+      .map((label, i) => ({ label, count: rawData[i] }))
+      .filter((item) => item.count > 0);
+
+    const labels = filtered.map((item) => item.label);
+    const data = filtered.map((item) => item.count);
+
+    const barChartData: ChartDataset[] = [{ data, label: 'Topics' }];
 
     return {
       title: 'Topic States Distribution',
       subtitle: 'Track distribution state',
-      barChartLabels: labels,
+      barChartLabels: labels.length > 0 ? labels : ['No Data'],
       barChartData,
       barChartType: 'pie',
       barChartLegend: true,
@@ -423,7 +425,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
 
@@ -462,7 +463,6 @@ export class ChartService {
       barChartLegend: true,
       height: '50vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
 
@@ -500,7 +500,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
 
@@ -540,7 +539,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
 
@@ -587,7 +585,6 @@ export class ChartService {
       barChartLegend: true,
       height: '20vh',
       maxValue: this.getMaxValue(barChartData),
-      width: undefined,
     };
   }
 

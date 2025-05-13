@@ -1,13 +1,4 @@
-import {
-  AfterViewInit,
-  ChangeDetectorRef,
-  Component,
-  inject,
-  OnInit,
-  QueryList,
-  ViewChild,
-  ViewChildren,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -21,7 +12,6 @@ import {
 import { BaseUserComponent } from '../base/base-user.component';
 import { ChartService } from '../../service/chart.service';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
 import { TableRow } from '../base/common-table/common-table.component';
 
 interface MiniCard {
@@ -39,8 +29,8 @@ export interface CommonChart {
   barChartType: ChartType;
   barChartLegend: boolean;
   height: string;
-  width: string | undefined;
   maxValue: number;
+  [key: string]: any;
 }
 
 @Component({
@@ -81,9 +71,12 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       this.store.getEnrollmentDetails(),
       this.store.getTopicDetails(),
     ]).pipe(
-      map(([courses, users, topics]) =>
-        this.createMiniCardData(courses, users, topics)
-      )
+      map(([courses, users, topics]) => {
+        courses = this.filterCourse(courses);
+        users = this.filterEnrolment(users);
+        topics = this.filterTopicDetails(topics);
+        return this.createMiniCardData(courses, users, topics);
+      })
     );
 
     this.topicData$ = combineLatest([
@@ -92,6 +85,9 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       this.store.getTopicDetails(),
     ]).pipe(
       map(([courses, users, topicDetails]) => {
+        courses = this.filterCourse(courses);
+        users = this.filterEnrolment(users);
+        topicDetails = this.filterTopicDetails(topicDetails);
         var commonChartList: CommonChart[] = [
           this.chartService.getTopicsByRole(topicDetails, users),
           this.chartService.getTopicsPerCourse(courses, topicDetails),
@@ -109,14 +105,19 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       this.store.getTopicDetails(),
     ]).pipe(
       map(([courses, users, topicDetails]) => {
+        courses = this.filterCourse(courses);
+        users = this.filterEnrolment(users);
+        topicDetails = this.filterTopicDetails(topicDetails);
         var commonChartList: CommonChart[] = [
           this.chartService.getEntriesByRole(topicDetails, users),
           this.chartService.getEntriesByStudent(topicDetails, users),
           this.chartService.getEngagementByCourse(topicDetails, courses, users),
           this.chartService.getDiscussionActivityOverTime(topicDetails),
           this.chartService.getEntriesOverTime(topicDetails),
+
           this.chartService.getEntriesPerCourse(topicDetails, courses, users),
         ];
+        console.log(this.chartService.getEntriesOverTime(topicDetails));
         return commonChartList;
       })
     );
@@ -125,9 +126,14 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       this.courses$,
       this.store.getEnrollmentDetails(),
     ]).pipe(
-      map(([courses, enrollments]) =>
-        this.chartService.createEnrollmentChartStats(courses, enrollments)
-      )
+      map(([courses, enrollments]) => {
+        courses = this.filterCourse(courses);
+        enrollments = this.filterEnrolment(enrollments);
+        return this.chartService.createEnrollmentChartStats(
+          courses,
+          enrollments
+        );
+      })
     );
 
     this.tableData$ = combineLatest([
@@ -135,6 +141,8 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       this.store.getEnrollmentDetails(),
     ]).pipe(
       map(([topics, enrollments]) => {
+        topics = this.filterTopicDetails(topics);
+        enrollments = this.filterEnrolment(enrollments);
         return [
           this.buildParticipationTable(topics, enrollments),
           this.buildZeroParticipationTable(topics, enrollments),
@@ -142,6 +150,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       })
     );
   }
+
   override ngOnInit(): void {
     super.ngOnInit();
     this.store.loadData();
@@ -174,7 +183,8 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       dataSource: new MatTableDataSource(tableRows),
       columnConfigs: columnConfigs,
       displayedColumns: columns,
-      title: 'Student Participation'
+      title: 'Student Participation',
+      subtitle: 'Get list of students who has participated'
     };
   }
 
@@ -198,7 +208,8 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       dataSource: new MatTableDataSource(data),
       columnConfigs: columnConfigs,
       displayedColumns: displayedColumns,
-      title: 'Student with Zero Participation'
+      title: 'Student with Zero Participation',
+      subtitle: 'Got list of students who have not participated'
     };
   }
 
@@ -306,7 +317,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       {
         title:
           this.user.role === 'admin' ? 'Active Enrollments' : 'Active Students',
-        value: this.getEnrollment(enrollments, false).length,
+        value: this.filterEnrolmentList(enrollments, false).length,
         icon: 'group',
         link: () => this.toggleChart('students'),
       },
@@ -317,33 +328,6 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       link: stat.link,
     }));
   }
-
-  // private createStudentChartStats(users: EnrollmentDetails[]): CommonChart {
-  //   const activeUsers = users.filter(
-  //     (user) => user.user.user_state === 'active'
-  //   ).length;
-  //   const deletedUsers = users.filter(
-  //     (user) => user.user.user_state === 'deleted'
-  //   ).length;
-
-  //   const labels = ['Active', 'Deleted'];
-  //   const data = [activeUsers, deletedUsers];
-  //   const barChartData: ChartDataset[] = [
-  //     { data: data.filter((count) => count > 0), label: 'Users' },
-  //   ];
-
-  //   return {
-  //     title: 'User Status Distribution',
-  //     subtitle: 'No idea',
-  //     barChartLabels: labels,
-  //     barChartData,
-  //     barChartType: 'pie',
-  //     barChartLegend: true,
-  //     height: '20vh',
-  //     maxValue: this.getMaxValue(barChartData),
-  //     width: undefined,
-  //   };
-  // }
 
   toggleChart(type: 'course' | 'students' | 'topics' | 'entries'): void {
     this.show = {

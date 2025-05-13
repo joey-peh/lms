@@ -67,4 +67,5 @@ export interface TableDetails<T> {
   columnConfigs: ColumnConfig[];
   displayedColumns: string[];
   title: string;
+  subtitle: string;
 }

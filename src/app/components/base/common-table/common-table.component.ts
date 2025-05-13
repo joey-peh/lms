@@ -12,7 +12,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 
 export interface TableRow {
-  [key: string]: any; // dynamic keys for each month
+  [key: string]: any; 
 }
 
 @Component({

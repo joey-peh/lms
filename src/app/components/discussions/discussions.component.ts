@@ -41,6 +41,7 @@ export class DiscussionsComponent
     columnConfigs: [],
     displayedColumns: [],
     title: '',
+    subtitle: '',
   };
 
   entry: TableDetails<EntryDetails> = {
@@ -48,6 +49,7 @@ export class DiscussionsComponent
     columnConfigs: [],
     displayedColumns: [],
     title: '',
+    subtitle: '',
   };
 
   columnFilters: { [key: string]: string } = {};
@@ -61,6 +63,7 @@ export class DiscussionsComponent
     this.topicDetails$ = this.store.getTopicDetails();
 
     this.topicDetails$.subscribe((topics) => {
+      topics = this.filterTopicDetails(topics);
       this.configureDiscussionTable(topics);
       this.cdr.markForCheck();
     });
@@ -232,6 +235,7 @@ export class DiscussionsComponent
               columnConfigs: [],
               displayedColumns: [],
               title: '',
+              subtitle: '',
             };
             this.cdr.markForCheck();
           });
