@@ -30,17 +30,14 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
   @Input() tableData!: TableDetails<TableRow>;
   @Input() deleteFn?: (data: any) => void;
   @Input() sortFn?: (data: any) => void;
+  @Input() showDeleteButtonFn?: (element: any) => boolean;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   columnFilters: { [key: string]: string } = {};
-  showDeleteButton: boolean = false;
 
   ngOnInit(): void {
-    if (this.deleteFn) {
-      this.showDeleteButton = true;
-    }
     this.tableData.dataSource.filterPredicate = (
       data: any,
       filter: string

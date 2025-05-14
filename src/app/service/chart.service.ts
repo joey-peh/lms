@@ -644,11 +644,13 @@ export class ChartService {
         enrollment.enrollment_state === 'active' &&
         enrollment.enrollment_type === 'student'
       ) {
-        const date = new Date(enrollment.user.user_created_at);
+        let date = new Date(enrollment.user.user_created_at);
+
         if (isNaN(date.getTime())) {
-          console.warn(
-            `Invalid date for course ${enrollment.course.course_id}: ${enrollment.course.course_created_at}`
-          );
+          date = this.parseCustomDate(enrollment.user.user_created_at);
+        }
+
+        if (isNaN(date.getTime())) {
           return;
         }
         const monthKey = `${date.getFullYear()}-${String(
@@ -725,6 +727,27 @@ export class ChartService {
       maxValue: this.getMaxValue(lineChartData),
       displayLabel: false,
     };
+  }
+
+  private parseCustomDate(dateStr: string): Date {
+    const [datePart, timePart] = dateStr.split(', ');
+    const [day, month, year] = datePart.split('/');
+    return new Date(
+      `${year}-${month}-${day}T${this.convertTo24Hour(timePart)}`
+    );
+  }
+
+  private convertTo24Hour(time12h: string): string {
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes, seconds] = time.split(':').map(Number);
+
+    if (modifier === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (modifier === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
   }
 
   getTopicPopularityChart(topicsWithDetails: TopicDetails[]): CommonChart {

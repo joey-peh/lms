@@ -28,7 +28,7 @@
       <td mat-cell *matCellDef="let element">
         <ng-container
           *ngIf="
-            column.columnDef === 'action' && showDeleteButton;
+            column.columnDef === 'action' && showDeleteButtonFn?.(element);
             else regularCell
           "
         >

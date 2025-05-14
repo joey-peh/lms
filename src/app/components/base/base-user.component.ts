@@ -67,4 +67,5 @@ export abstract class BaseUserComponent implements OnInit, OnDestroy {
       this.user.course_id.includes(topic.course_id)
     );
   }
+  
 }

@@ -33,6 +33,10 @@ export class UserComponent extends BaseUserComponent implements OnInit {
     subtitle: '',
   };
 
+  canDelete = () => {
+    return this.user.role === 'admin';
+  };
+
   override ngOnInit(): void {
     super.ngOnInit();
     this.enrollmentData$ = this.store.getEnrollmentDetails();
@@ -44,7 +48,7 @@ export class UserComponent extends BaseUserComponent implements OnInit {
           ['user', 'course'],
           [
             {
-              key: 'user_name',
+              key: 'user.user_name',
               displayName: 'Username',
               selector: (enrollment) => enrollment.user.user_name,
             },
@@ -56,7 +60,6 @@ export class UserComponent extends BaseUserComponent implements OnInit {
           ]
         );
 
-      // Add delete button column
       if (this.user.role === 'admin') {
         columnConfigs.push({
           columnDef: 'action',

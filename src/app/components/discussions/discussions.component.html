@@ -13,7 +13,7 @@
         mat-table
         [dataSource]="topicList.dataSource"
         matSort
-        (matSortChange)="sortData($event, 'topics')"
+        (matSortChange)="sortTopics($event)"
       >
         <!-- Existing Columns -->
         <ng-container
@@ -84,7 +84,7 @@
           mat-table
           [dataSource]="entry.dataSource"
           matSort
-          (matSortChange)="sortData($event, 'entries')"
+          (matSortChange)="sortEntries($event)"
         >
           <ng-container
             *ngFor="let column of entry.columnConfigs"

@@ -11,7 +11,12 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, Sort } from '@angular/material/sort'; // Import MatSort
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { Observable } from 'rxjs';
-import { EntryDetails, TableDetails, TopicDetails } from '../../models/lms-models';
+import {
+  EntryDetails,
+  TableDetails,
+  TableRow,
+  TopicDetails,
+} from '../../models/lms-models';
 import { CommonService } from '../../service/common-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
 import { ConfirmDialogComponent } from '../base/confirm-dialog/confirm-dialog.component';
@@ -32,16 +37,16 @@ export class DiscussionsComponent
 
   topicDetails$!: Observable<TopicDetails[]>;
 
-  topicList: TableDetails<TopicDetails> = {
-    dataSource: new MatTableDataSource<TopicDetails>([]),
+  topicList: TableDetails<TableRow> = {
+    dataSource: new MatTableDataSource<TableRow>([]),
     columnConfigs: [],
     displayedColumns: [],
     title: '',
     subtitle: '',
   };
 
-  entry: TableDetails<EntryDetails> = {
-    dataSource: new MatTableDataSource<EntryDetails>([]),
+  entry: TableDetails<TableRow> = {
+    dataSource: new MatTableDataSource<TableRow>([]),
     columnConfigs: [],
     displayedColumns: [],
     title: '',
@@ -51,9 +56,13 @@ export class DiscussionsComponent
   columnFilters: { [key: string]: string } = {};
   selectedTopic: any = null; // Track selected topic
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild('topicsSort') topicsSort!: MatSort; // Reference for topics table sort
-  @ViewChild('entriesSort') entriesSort!: MatSort; // Reference for entries table sort
+  canDeleteTopic = (element: TopicDetails) => {
+    return (
+      element.topic_state !== 'deleted' &&
+      (element.topic_posted_by_user_id.toString() === this.user.user_id ||
+        this.user.role === 'admin')
+    );
+  };
 
   override ngOnInit(): void {
     super.ngOnInit();
@@ -66,7 +75,7 @@ export class DiscussionsComponent
     });
 
     this.topicList.dataSource.filterPredicate = (
-      data: TopicDetails,
+      data: TableRow,
       filter: string
     ): boolean => {
       const filters: { id: string; value: string }[] = JSON.parse(filter);
@@ -87,39 +96,34 @@ export class DiscussionsComponent
   }
 
   ngAfterViewInit(): void {
-    this.topicList.dataSource.paginator = this.paginator;
-    this.topicList.dataSource.sort = this.topicsSort; // Link sort to topics table
-    this.entry.dataSource.sort = this.entriesSort; // Link sort to entries table
-
-    // Custom sorting accessor for topics
-    this.topicList.dataSource.sortingDataAccessor = (
-      data: TopicDetails,
-      property: string
-    ) => {
-      const config = this.topicList.columnConfigs.find(
-        (col) => col.columnDef === property
-      );
-      if (config) {
-        const value = config.cell(data);
-        return typeof value === 'string' ? value.toLowerCase() : value;
-      }
-      return '';
-    };
-
-    // Custom sorting accessor for entries
-    this.entry.dataSource.sortingDataAccessor = (
-      data: EntryDetails,
-      property: string
-    ) => {
-      const config = this.entry.columnConfigs.find(
-        (col) => col.columnDef === property
-      );
-      if (config) {
-        const value = config.cell(data);
-        return typeof value === 'string' ? value.toLowerCase() : value;
-      }
-      return '';
-    };
+    // // Custom sorting accessor for topics
+    // this.topicList.dataSource.sortingDataAccessor = (
+    //   data: TableRow,
+    //   property: string
+    // ) => {
+    //   const config = this.topicList.columnConfigs.find(
+    //     (col) => col.columnDef === property
+    //   );
+    //   if (config) {
+    //     const value = config.cell(data);
+    //     return typeof value === 'string' ? value.toLowerCase() : value;
+    //   }
+    //   return '';
+    // };
+    // // Custom sorting accessor for entries
+    // this.entry.dataSource.sortingDataAccessor = (
+    //   data: TableRow,
+    //   property: string
+    // ) => {
+    //   const config = this.entry.columnConfigs.find(
+    //     (col) => col.columnDef === property
+    //   );
+    //   if (config) {
+    //     const value = config.cell(data);
+    //     return typeof value === 'string' ? value.toLowerCase() : value;
+    //   }
+    //   return '';
+    // };
   }
 
   selectTopic(row: TopicDetails): void {
@@ -149,24 +153,24 @@ export class DiscussionsComponent
   }
 
   private configureDiscussionTable(topics: TopicDetails[]): void {
-    topics = topics.sort((a, b) => {
-      const isAUserEntry =
-        a.topic_posted_by_user_id.toString() === this.user.user_id;
-      const isBUserEntry =
-        b.topic_posted_by_user_id.toString() === this.user.user_id;
+    // topics = topics.sort((a, b) => {
+    //   const isAUserEntry =
+    //     a.topic_posted_by_user_id.toString() === this.user.user_id;
+    //   const isBUserEntry =
+    //     b.topic_posted_by_user_id.toString() === this.user.user_id;
 
-      if (isAUserEntry && !isBUserEntry) return -1;
-      if (!isAUserEntry && isBUserEntry) return 1;
+    //   if (isAUserEntry && !isBUserEntry) return -1;
+    //   if (!isAUserEntry && isBUserEntry) return 1;
 
-      const aEntries = a.entries.length;
-      const bEntries = b.entries.length;
+    //   const aEntries = a.entries.length;
+    //   const bEntries = b.entries.length;
 
-      if (aEntries !== bEntries) {
-        return bEntries - aEntries; // Sort by number of entries descending
-      }
+    //   if (aEntries !== bEntries) {
+    //     return bEntries - aEntries; // Sort by number of entries descending
+    //   }
 
-      return b.topic_created_at.localeCompare(a.topic_created_at);
-    });
+    //   return b.topic_created_at.localeCompare(a.topic_created_at);
+    // });
 
     const { columnConfigs, displayedColumns } =
       this.commonService.configureBaseColumnConfig(
@@ -174,14 +178,14 @@ export class DiscussionsComponent
         ['entries', 'course', 'user', 'topic_by_user', 'topic_deleted_at'],
         [
           {
-            key: 'course',
+            key: 'course.course_name',
             displayName: 'Course',
             selector: (topic) => topic.course.course_name,
             sortable: true, // Enable sorting
             filterable: true,
           },
           {
-            key: 'username',
+            key: 'topic_by_user.user_name',
             displayName: 'Created by user',
             selector: (topic) => topic.topic_by_user.user_name,
             sortable: true, // Enable sorting
@@ -223,7 +227,7 @@ export class DiscussionsComponent
     this.topicList.dataSource.filter = JSON.stringify(tableFilters);
   }
 
-  deleteTopic(element: TopicDetails): void {
+  deleteTopic = (element: TopicDetails) => {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         message: `Are you sure you want to delete topic?`,
@@ -235,9 +239,10 @@ export class DiscussionsComponent
         this.store.deleteTopics(element).subscribe(() => {
           this.topicDetails$ = this.store.getTopicDetails();
           this.topicDetails$.subscribe((topics) => {
+            topics = this.filterTopicDetails(topics);
             this.topicList.dataSource.data = topics;
             this.entry = {
-              dataSource: new MatTableDataSource<EntryDetails>([]),
+              dataSource: new MatTableDataSource<TableRow>([]),
               columnConfigs: [],
               displayedColumns: [],
               title: '',
@@ -248,89 +253,101 @@ export class DiscussionsComponent
         });
       }
     });
-  }
+  };
 
-  sortData(sort: Sort, table: 'topics' | 'entries'): void {
-    if (table === 'topics') {
-      const dataSource = this.topicList
-        .dataSource as MatTableDataSource<TopicDetails>;
-      const topicsData = dataSource.data as TopicDetails[];
+  sortTopics = (sort: Sort) => {
+    const dataSource = this.topicList
+      .dataSource as MatTableDataSource<TableRow>;
+    const topicsData = dataSource.data as TopicDetails[];
 
-      if (!sort.active || sort.direction === '') {
-        this.configureDiscussionTable(topicsData);
-        this.cdr.markForCheck();
-        return;
-      }
-
-      dataSource.data = topicsData
-        .slice()
-        .sort((a: TopicDetails, b: TopicDetails) => {
-          const isAsc = sort.direction === 'asc';
-          const valueA = dataSource.sortingDataAccessor(a, sort.active);
-          const valueB = dataSource.sortingDataAccessor(b, sort.active);
-
-          if (valueA == null || valueB == null) {
-            return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
-          }
-
-          if (typeof valueA === 'string' && typeof valueB === 'string') {
-            return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
-          }
-
-          const numA =
-            typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
-          const numB =
-            typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
-
-          if (!isNaN(numA) && !isNaN(numB)) {
-            return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
-          }
-
-          return (
-            String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1)
-          );
-        });
-    } else {
-      const dataSource = this.entry
-        .dataSource as MatTableDataSource<EntryDetails>;
-      const entriesData = dataSource.data as EntryDetails[];
-
-      if (!sort.active || sort.direction === '') {
-        dataSource.data = entriesData.slice();
-        this.cdr.markForCheck();
-        return;
-      }
-
-      dataSource.data = entriesData
-        .slice()
-        .sort((a: EntryDetails, b: EntryDetails) => {
-          const isAsc = sort.direction === 'asc';
-          const valueA = dataSource.sortingDataAccessor(a, sort.active);
-          const valueB = dataSource.sortingDataAccessor(b, sort.active);
-
-          if (valueA == null || valueB == null) {
-            return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
-          }
-
-          if (typeof valueA === 'string' && typeof valueB === 'string') {
-            return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
-          }
-
-          const numA =
-            typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
-          const numB =
-            typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
-
-          if (!isNaN(numA) && !isNaN(numB)) {
-            return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
-          }
-
-          return (
-            String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1)
-          );
-        });
+    if (!sort.active || sort.direction === '') {
+      this.configureDiscussionTable(topicsData);
+      this.cdr.markForCheck();
+      return;
     }
 
+    dataSource.data = topicsData
+      .slice()
+      .sort((a: TopicDetails, b: TopicDetails) => {
+        const isAsc = sort.direction === 'asc';
+        var valueA = dataSource.sortingDataAccessor(a, sort.active);
+        var valueB = dataSource.sortingDataAccessor(b, sort.active);
+
+        if (valueA == undefined || valueB == undefined) {
+          valueA = this.getNestedValue(a, sort.active);
+          valueB = this.getNestedValue(b, sort.active);
+        }
+
+        if (valueA == null || valueB == null) {
+          return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
+        }
+
+        if (typeof valueA === 'string' && typeof valueB === 'string') {
+          return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
+        }
+
+        const numA =
+          typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
+        const numB =
+          typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
+        }
+
+        return String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1);
+      });
     this.cdr.markForCheck();
+  };
+
+  sortEntries = (sort: Sort) => {
+    const dataSource = this.entry.dataSource as MatTableDataSource<TableRow>;
+    const entriesData = dataSource.data as EntryDetails[];
+
+    if (!sort.active || sort.direction === '') {
+      dataSource.data = entriesData.slice();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    dataSource.data = entriesData
+      .slice()
+      .sort((a: EntryDetails, b: EntryDetails) => {
+        const isAsc = sort.direction === 'asc';
+        var valueA = dataSource.sortingDataAccessor(a, sort.active);
+        var valueB = dataSource.sortingDataAccessor(b, sort.active);
+
+        if (valueA == undefined || valueB == undefined) {
+          valueA = this.getNestedValue(a, sort.active);
+          valueB = this.getNestedValue(b, sort.active);
+        }
+
+        if (valueA == null || valueB == null) {
+          return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
+        }
+
+        if (typeof valueA === 'string' && typeof valueB === 'string') {
+          return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
+        }
+
+        const numA =
+          typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
+        const numB =
+          typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
+        }
+
+        return String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1);
+      });
+
+    this.cdr.markForCheck();
+  };
+
+  getNestedValue(obj: any, path: string) {
+    return path
+      .split('.')
+      .reduce((acc, part) => (acc ? acc[part] : undefined), obj);
   }
 }
