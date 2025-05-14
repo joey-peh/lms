@@ -1,4 +1,3 @@
-// Angular Material and Chart.js Imports
 import { MatTableDataSource } from '@angular/material/table';
 import { ChartDataset, ChartType } from 'chart.js';
 
