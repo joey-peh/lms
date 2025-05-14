@@ -101,7 +101,6 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
           this.chartService.getEntriesPerCourse(topicDetails, courses, users),
         ];
-        console.log(this.chartService.getEntriesOverTime(topicDetails));
         return commonChartList;
       })
     );

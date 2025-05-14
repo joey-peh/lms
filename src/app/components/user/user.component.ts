@@ -1,13 +1,12 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  ViewChild
-} from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { MatPaginator } from '@angular/material/paginator';
-import { EnrollmentDetails, TableDetails, TableRow } from '../../models/lms-models';
+import {
+  EnrollmentDetails,
+  TableDetails,
+  TableRow,
+} from '../../models/lms-models';
 import { Observable } from 'rxjs';
 import { CommonService } from '../../service/common-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
@@ -31,7 +30,7 @@ export class UserComponent extends BaseUserComponent implements OnInit {
     columnConfigs: [],
     displayedColumns: [],
     title: '',
-    subtitle: ''
+    subtitle: '',
   };
 
   override ngOnInit(): void {
@@ -50,7 +49,7 @@ export class UserComponent extends BaseUserComponent implements OnInit {
               selector: (enrollment) => enrollment.user.user_name,
             },
             {
-              key: 'course',
+              key: 'course.course_name',
               displayName: 'Course',
               selector: (enrollment) => enrollment.course.course_name,
             },
@@ -69,8 +68,12 @@ export class UserComponent extends BaseUserComponent implements OnInit {
         displayedColumns.push('action');
       }
 
-      this.userData.title = this.user.role == 'admin' ? 'Active Enrollments' : 'Active Students';
-      this.userData.subtitle = this.user.role == 'admin' ? 'Get list of all enrollments' : 'Get list of active student enrollments under instructor';
+      this.userData.title =
+        this.user.role == 'admin' ? 'Active Enrollments' : 'Active Students';
+      this.userData.subtitle =
+        this.user.role == 'admin'
+          ? 'Get list of all enrollments'
+          : 'Get list of active student enrollments under instructor';
       this.userData.dataSource.data = studentEnrollment;
       this.userData.columnConfigs = columnConfigs;
       this.userData.displayedColumns = displayedColumns;
@@ -89,7 +92,10 @@ export class UserComponent extends BaseUserComponent implements OnInit {
         this.store.deleteEnrollment(enrollment).subscribe(() => {
           this.enrollmentData$ = this.store.getEnrollmentDetails();
           this.enrollmentData$.subscribe((enrollments) => {
-            const studentEnrollment = this.filterEnrolmentList(enrollments, true);
+            const studentEnrollment = this.filterEnrolmentList(
+              enrollments,
+              true
+            );
             this.userData.dataSource.data = studentEnrollment;
           });
         });

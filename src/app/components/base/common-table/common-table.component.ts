@@ -7,10 +7,15 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { TableDetails, TableRow } from '../../../models/lms-models';
+import {
+  TableDetails,
+  TableRow,
+  TopicDetails,
+} from '../../../models/lms-models';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, Sort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 
 @Component({
   selector: 'app-common-table',
@@ -24,6 +29,7 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
 
   @Input() tableData!: TableDetails<TableRow>;
   @Input() deleteFn?: (data: any) => void;
+  @Input() sortFn?: (data: any) => void;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -46,7 +52,6 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
           (col) => col.columnDef === id
         );
 
-        console.log('filter', id, value);
         if (!config || !config.filterable) {
           return true;
         }
@@ -84,5 +89,54 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
     }
   }
 
-  applySorting(event: Sort): void {}
+  applySorting(sort: Sort): void {
+    if (this.sortFn) {
+      this.sortFn(sort);
+    } else {
+      const dataSource = this.tableData
+        .dataSource as MatTableDataSource<TableRow>;
+      const topicsData = dataSource.data as TableRow[];
+
+      if (!sort.active || sort.direction === '') {
+        this.cdr.markForCheck();
+        return;
+      }
+
+      dataSource.data = topicsData.slice().sort((a: TableRow, b: TableRow) => {
+        const isAsc = sort.direction === 'asc';
+        var valueA = dataSource.sortingDataAccessor(a, sort.active);
+        var valueB = dataSource.sortingDataAccessor(b, sort.active);
+
+        if (valueA == undefined || valueB == undefined) {
+          valueA = this.getNestedValue(a, sort.active);
+          valueB = this.getNestedValue(b, sort.active);
+        }
+
+        if (valueA == null || valueB == null) {
+          return (valueA == null ? -1 : 1) * (isAsc ? 1 : -1);
+        }
+
+        if (typeof valueA === 'string' && typeof valueB === 'string') {
+          return valueA.localeCompare(valueB) * (isAsc ? 1 : -1);
+        }
+
+        const numA =
+          typeof valueA === 'number' ? valueA : parseFloat(valueA as string);
+        const numB =
+          typeof valueB === 'number' ? valueB : parseFloat(valueB as string);
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return (numA < numB ? -1 : 1) * (isAsc ? 1 : -1);
+        }
+
+        return String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1);
+      });
+    }
+  }
+
+  getNestedValue(obj: any, path: string) {
+    return path
+      .split('.')
+      .reduce((acc, part) => (acc ? acc[part] : undefined), obj);
+  }
 }
