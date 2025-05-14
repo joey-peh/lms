@@ -1,5 +1,12 @@
+// Angular Material and Chart.js Imports
 import { MatTableDataSource } from '@angular/material/table';
 import { ChartDataset, ChartType } from 'chart.js';
+
+//
+// ────────────────────────────────────────────────────────────────────────────────
+//   Interfaces: Core Entities
+// ────────────────────────────────────────────────────────────────────────────────
+//
 
 export interface Course {
   course_id: number;
@@ -9,22 +16,19 @@ export interface Course {
   course_created_at: string;
 }
 
+export interface User {
+  user_id: number;
+  user_name: string;
+  user_created_at: string;
+  user_deleted_at: string | null;
+  user_state: 'active' | 'deleted';
+}
+
 export interface Enrollment {
   user_id: number;
   course_id: number;
   enrollment_type: 'student' | 'teacher';
   enrollment_state: 'active' | 'deleted';
-}
-
-export interface Entries {
-  entry_id: number;
-  entry_content: string;
-  entry_created_at: string; // ISO datetime string
-  entry_deleted_at: string | null; // 'NA' or a date string
-  entry_state: 'active' | 'inactive' | string; // Adjust based on known states
-  entry_parent_id: number | null; // 'NA' means no parent
-  entry_posted_by_user_id: number;
-  topic_id: number;
 }
 
 export interface Topic {
@@ -38,21 +42,22 @@ export interface Topic {
   topic_posted_by_user_id: number;
 }
 
-export interface ColumnConfig {
-  columnDef: string;
-  displayName: string;
-  cell: (element: any) => any;
-  sortable: boolean;
-  filterable: boolean;
+export interface Entries {
+  entry_id: number;
+  entry_content: string;
+  entry_created_at: string;
+  entry_deleted_at: string | null;
+  entry_state: 'active' | 'inactive' | string;
+  entry_parent_id: number | null;
+  entry_posted_by_user_id: number;
+  topic_id: number;
 }
 
-export interface User {
-  user_id: number;
-  user_name: string;
-  user_created_at: string;
-  user_deleted_at: string | null;
-  user_state: 'active' | 'deleted';
-}
+//
+// ────────────────────────────────────────────────────────────────────────────────
+//   Interfaces: Authentication & User Details
+// ────────────────────────────────────────────────────────────────────────────────
+//
 
 export interface LoginUser {
   user_login_id: string;
@@ -63,12 +68,65 @@ export interface LoginUser {
   course_id: number[];
 }
 
+export interface UserDetails extends User {
+  enrollment: Enrollment[];
+  course: Course[];
+}
+
+//
+// ────────────────────────────────────────────────────────────────────────────────
+//   Interfaces: Composite / Relationship Models
+// ────────────────────────────────────────────────────────────────────────────────
+//
+
+export interface EnrollmentDetails extends Enrollment {
+  user: User;
+  course: Course;
+  t: string;
+}
+
+export interface TopicDetails extends Topic {
+  course: Course;
+  topic_by_user: User;
+  entries: EntryDetails[];
+}
+
+export interface EntryDetails extends Entries {
+  entry_by_user: User;
+}
+
+//
+// ────────────────────────────────────────────────────────────────────────────────
+//   Interfaces: UI/Table/Chart Components
+// ────────────────────────────────────────────────────────────────────────────────
+//
+
+export interface ColumnConfig {
+  columnDef: string;
+  displayName: string;
+  cell: (element: any) => any;
+  sortable: boolean;
+  filterable: boolean;
+}
+
+export interface ColumnDefinition<T> {
+  key: string;
+  displayName: string;
+  selector: (element: T) => T[keyof T];
+  sortable?: boolean;
+  filterable?: boolean;
+}
+
 export interface TableDetails<T> {
   dataSource: MatTableDataSource<T>;
   columnConfigs: ColumnConfig[];
   displayedColumns: string[];
   title: string;
   subtitle: string;
+}
+
+export interface TableRow {
+  [key: string]: any;
 }
 
 export interface MiniCard {
@@ -89,38 +147,6 @@ export interface CommonChart {
   maxValue: number;
   [key: string]: any;
 }
-export interface LmsState {
-  courses: Course[];
-  users: User[];
-  enrollments: Enrollment[];
-  topics: Topic[];
-  entries: Entries[];
-}
-
-export interface UserDetails extends User {
-  enrollment: Enrollment[];
-  course: Course[];
-}
-
-export interface EnrollmentDetails extends Enrollment {
-  user: User;
-  course: Course;
-  t: string;
-}
-
-export interface TopicDetails extends Topic {
-  course: Course;
-  topic_by_user: User;
-  entries: EntryDetails[];
-}
-
-export interface EntryDetails extends Entries {
-  entry_by_user: User;
-}
-
-export interface TableRow {
-  [key: string]: any;
-}
 
 export interface MenuItem {
   label: string;
@@ -129,16 +155,22 @@ export interface MenuItem {
   roles: string[];
 }
 
-export interface ColumnDefinition<T> {
-  key: string;
-  displayName: string;
-  selector: (element: T) => T[keyof T];
-  sortable?: boolean;
-  filterable?: boolean;
+//
+// ────────────────────────────────────────────────────────────────────────────────
+//   Interfaces: Application State
+// ────────────────────────────────────────────────────────────────────────────────
+//
+
+export interface LmsState {
+  courses: Course[];
+  users: User[];
+  enrollments: Enrollment[];
+  topics: Topic[];
+  entries: Entries[];
 }
 
 export interface AppState extends LmsState {
   loading: boolean;
   error: string | null;
-  currentUser: LoginUser | null; // Add currentUser to store the logged-in user
+  currentUser: LoginUser | null;
 }
