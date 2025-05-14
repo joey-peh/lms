@@ -651,6 +651,7 @@ export class ChartService {
         }
 
         if (isNaN(date.getTime())) {
+          console.warn('warning', enrollment.user.user_created_at);
           return;
         }
         const monthKey = `${date.getFullYear()}-${String(
@@ -705,7 +706,7 @@ export class ChartService {
       return {
         title: 'Per-Course Enrollment Trend',
         subtitle:
-          'Visualizes monthly enrollment trends across courses to track growth and engagement over time.',
+          'Displays monthly enrollment trends across courses to monitor growth and user engagement over time. Assumption: user.user_created_at represents the enrollment date for a course.',
         barChartLabels: ['No Data'],
         barChartData: [{ data: [0], label: 'No Enrollments', fill: false }],
         barChartType: 'line',
@@ -718,7 +719,7 @@ export class ChartService {
     return {
       title: 'Per-Course Enrollment Trend',
       subtitle:
-        'Visualizes monthly enrollment trends across courses to track growth and engagement over time.',
+        'Displays monthly enrollment trends across courses to monitor growth and user engagement over time. Assumption: user.user_created_at represents the enrollment date for a course.',
       barChartLabels: labels,
       barChartData: lineChartData,
       barChartType: 'line',
@@ -729,25 +730,22 @@ export class ChartService {
     };
   }
 
-  private parseCustomDate(dateStr: string): Date {
-    const [datePart, timePart] = dateStr.split(', ');
-    const [day, month, year] = datePart.split('/');
-    return new Date(
-      `${year}-${month}-${day}T${this.convertTo24Hour(timePart)}`
+  parseCustomDate(dateStr: string): Date {
+    const match = dateStr.match(
+      /^(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2}) (AM|PM)$/
     );
-  }
+    if (!match) return new Date(''); // Invalid format
 
-  private convertTo24Hour(time12h: string): string {
-    const [time, modifier] = time12h.split(' ');
-    let [hours, minutes, seconds] = time.split(':').map(Number);
+    let [, day, month, year, hour, minute, second, period] = match;
+    let h = parseInt(hour, 10);
+    if (period === 'PM' && h < 12) h += 12;
+    if (period === 'AM' && h === 12) h = 0;
 
-    if (modifier === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (modifier === 'AM' && hours === 12) {
-      hours = 0;
-    }
-
-    return `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+    return new Date(
+      `${year}-${month}-${day}T${h
+        .toString()
+        .padStart(2, '0')}:${minute}:${second}`
+    );
   }
 
   getTopicPopularityChart(topicsWithDetails: TopicDetails[]): CommonChart {
