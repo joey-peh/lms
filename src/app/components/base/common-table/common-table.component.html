@@ -1,9 +1,19 @@
-<div class="mat-elevation-z8" style="margin: 20px 0;">
-  <table mat-table [dataSource]="tableData.dataSource" class="full-width-table">
+<div class="mat-elevation-z8" style="margin: 20px 0">
+  <table
+    mat-table
+    [dataSource]="tableData.dataSource"
+    matSort
+    (matSortChange)="applySorting($event)"
+    class="full-width-table"
+  >
     <ng-container
       *ngFor="let column of tableData.columnConfigs"
       [matColumnDef]="column.columnDef"
-      ><th mat-header-cell *matHeaderCellDef>
+      ><th
+        mat-header-cell
+        [mat-sort-header]="column.columnDef"
+        *matHeaderCellDef
+      >
         <ng-container *ngIf="column.columnDef !== 'action'">
           {{ column.displayName }}
           <input

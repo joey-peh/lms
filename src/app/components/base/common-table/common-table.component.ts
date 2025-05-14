@@ -10,6 +10,7 @@ import {
 import { TableDetails, TableRow } from '../../../models/lms-models';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSort, Sort } from '@angular/material/sort';
 
 @Component({
   selector: 'app-common-table',
@@ -25,6 +26,7 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
   @Input() deleteFn?: (data: any) => void;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
   columnFilters: { [key: string]: string } = {};
   showDeleteButton: boolean = false;
@@ -59,6 +61,7 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
   }
   ngAfterViewInit(): void {
     this.tableData.dataSource.paginator = this.paginator;
+    this.tableData.dataSource.sort = this.sort;
     this.cdr.detectChanges();
   }
 
@@ -80,4 +83,6 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
       this.deleteFn(element);
     }
   }
+
+  applySorting(event: Sort): void {}
 }
