@@ -77,21 +77,22 @@
 
     <div *ngIf="show.course">
       <mat-grid-tile
-        [colspan]="(cardLayout | async)?.largeCard?.cols"
-        [rowspan]="(cardLayout | async)?.largeCard?.rows"
+        *ngFor="let enrolmentData of enrollmentData$ | async"
+        [colspan]="(cardLayout | async)?.midCard?.cols"
+        [rowspan]="(cardLayout | async)?.midCard?.rows"
       >
         <app-card
-          title="Enrollment per Course"
-          subtitle="To analyze the popularity of each course"
+          [title]="enrolmentData.title"
+          [subtitle]="enrolmentData.subtitle"
         >
           <app-common-chart
-            *ngIf="enrollmentData$ | async as enrollmentData"
-            [height]="enrollmentData.height"
-            [barChartLabels]="enrollmentData.barChartLabels"
-            [barChartData]="enrollmentData.barChartData"
-            [barChartType]="enrollmentData.barChartType"
-            [barChartLegend]="enrollmentData.barChartLegend"
-            [maxValue]="enrollmentData.maxValue"
+            [height]="enrolmentData.height"
+            [barChartLabels]="enrolmentData.barChartLabels"
+            [barChartData]="enrolmentData.barChartData"
+            [barChartType]="enrolmentData.barChartType"
+            [barChartLegend]="enrolmentData.barChartLegend"
+            [maxValue]="enrolmentData.maxValue"
+            [displayLabel]="enrolmentData['displayLabel']"
           ></app-common-chart>
         </app-card>
       </mat-grid-tile>

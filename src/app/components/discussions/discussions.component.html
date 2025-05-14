@@ -1,5 +1,7 @@
 <div class="grid-container">
-  <mat-card-title class="mat-mdc-card-title">Discussions</mat-card-title>
+  <div style="margin-bottom: 15px;">
+  <mat-card-title>Discussions</mat-card-title>
+  <mat-card-subtitle>Analyze discussion activity to gain insights into student engagement and topic relevance.</mat-card-subtitle></div>
   <div>
     <div>
       <h3>Topics</h3>
@@ -28,7 +30,6 @@
                 (keyup)="applyFilter($event, column.columnDef)"
                 (click)="$event.stopPropagation()"
                 (keydown)="$event.stopPropagation()"
-                [placeholder]="'Filter by ' + column.displayName"
                 style="margin: 5px 0"
               />
             </ng-container>

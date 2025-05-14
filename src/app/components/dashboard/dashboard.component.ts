@@ -3,35 +3,18 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
-import { ChartDataset, ChartType } from 'chart.js';
-import { Course, TableDetails } from '../../models/lms-models';
 import {
+  CommonChart,
+  Course,
   EnrollmentDetails,
+  MiniCard,
+  TableDetails,
+  TableRow,
   TopicDetails,
-} from '../../service/csv-data-service.service';
+} from '../../models/lms-models';
 import { BaseUserComponent } from '../base/base-user.component';
 import { ChartService } from '../../service/chart.service';
 import { MatTableDataSource } from '@angular/material/table';
-import { TableRow } from '../base/common-table/common-table.component';
-
-interface MiniCard {
-  title: string;
-  textValue: string;
-  icon: string;
-  link: () => void;
-}
-
-export interface CommonChart {
-  title: string;
-  subtitle: string;
-  barChartLabels: string[];
-  barChartData: ChartDataset[];
-  barChartType: ChartType;
-  barChartLegend: boolean;
-  height: string;
-  maxValue: number;
-  [key: string]: any;
-}
 
 @Component({
   selector: 'app-dashboard',
@@ -50,7 +33,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   miniCardData$: Observable<MiniCard[]>;
   topicData$: Observable<CommonChart[]>;
   entryData$: Observable<CommonChart[]>;
-  enrollmentData$: Observable<CommonChart>;
+  enrollmentData$: Observable<CommonChart[]>;
   tableData$: Observable<TableDetails<TableRow>[]>;
 
   show = { course: false, students: false, topics: false, entries: false };
@@ -89,6 +72,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
         users = this.filterEnrolment(users);
         topicDetails = this.filterTopicDetails(topicDetails);
         var commonChartList: CommonChart[] = [
+          this.chartService.getTopicPopularityChart(topicDetails),
           this.chartService.getTopicsByRole(topicDetails, users),
           this.chartService.getTopicsPerCourse(courses, topicDetails),
           this.chartService.getTopicsPerUser(users, topicDetails),
@@ -129,11 +113,10 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       map(([courses, enrollments]) => {
         courses = this.filterCourse(courses);
         enrollments = this.filterEnrolment(enrollments);
-        return [this.chartService.createEnrollmentChartStats(
-          courses,
-          enrollments
-        ),
-               this.chartService.createEnrollmentTrendChart(courses, enrollments)];
+        return [
+          this.chartService.createEnrollmentChartStats(courses, enrollments),
+          this.chartService.createPerCourseEnrollmentTrendChart(enrollments),
+        ];
       })
     );
 
@@ -144,10 +127,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       map(([topics, enrollments]) => {
         topics = this.filterTopicDetails(topics);
         enrollments = this.filterEnrolment(enrollments);
-        return [
-          this.buildParticipationTable(topics, enrollments),
-          this.buildZeroParticipationTable(topics, enrollments),
-        ];
+        return [this.buildParticipationTable(topics, enrollments)];
       })
     );
   }
@@ -185,63 +165,21 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       columnConfigs: columnConfigs,
       displayedColumns: columns,
       title: 'Student Participation',
-      subtitle: 'Get list of students who has participated'
+      subtitle:
+        'Details the number of posts made by each student, providing a comprehensive view of individual engagement levels.',
     };
-  }
-
-  private buildZeroParticipationTable(
-    topics: TopicDetails[],
-    enrollments: EnrollmentDetails[]
-  ): TableDetails<TableRow> {
-    const displayedColumns = ['name'];
-    const columnConfigs = [
-      {
-        columnDef: 'name',
-        displayName: 'Student Name',
-        cell: (row: { name: string }) => row.name,
-        sortable: false,
-        filterable: true,
-      },
-    ];
-    const zeroStudents = this.getZeroParticipationStudents(topics, enrollments);
-    const data: TableRow[] = zeroStudents.map((name) => ({ name }));
-    return {
-      dataSource: new MatTableDataSource(data),
-      columnConfigs: columnConfigs,
-      displayedColumns: displayedColumns,
-      title: 'Student with Zero Participation',
-      subtitle: 'Got list of students who have not participated'
-    };
-  }
-
-  getZeroParticipationStudents(
-    topicsWithDetails: TopicDetails[],
-    users: EnrollmentDetails[]
-  ): string[] {
-    const participationMap: Record<string, number> = {};
-
-    for (const topic of topicsWithDetails) {
-      for (const entry of topic.entries) {
-        const userId = entry.entry_posted_by_user_id.toString();
-        if (!userId) continue;
-        participationMap[userId] = (participationMap[userId] || 0) + 1;
-      }
-    }
-
-    return users
-      .filter((user) => !participationMap[user.user_id.toString()])
-      .map((user) => user.user.user_name);
   }
 
   getParticipationTable(
     topicsWithDetails: TopicDetails[],
     users: EnrollmentDetails[],
-    groupBy: 'course' | 'topic' = 'course' // 👈 you can toggle this
+    groupBy: 'course' | 'topic' = 'course'
   ): { headers: string[]; rows: { name: string; values: number[] }[] } {
     const engagementByGroup: {
       [groupName: string]: { [userId: string]: number };
     } = {};
 
+    // Build engagement data
     for (const topic of topicsWithDetails) {
       const groupName =
         groupBy === 'course' ? topic.course.course_name : topic.topic_title;
@@ -268,13 +206,10 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       usersById[user.user_id.toString()] = user.user.user_name;
     });
 
-    // Collect all user IDs
-    const allUserIds = new Set<string>();
-    Object.values(engagementByGroup).forEach((groupData) => {
-      Object.keys(groupData).forEach((userId) => allUserIds.add(userId));
-    });
+    // Use all user IDs from the users array, not just those with entries
+    const allUserIds = users.map((user) => user.user_id.toString());
 
-    const rows = Array.from(allUserIds)
+    const rows = allUserIds
       .map((userId) => {
         const name = usersById[userId] ?? 'Unknown';
         const values = sortedGroupNames.map(

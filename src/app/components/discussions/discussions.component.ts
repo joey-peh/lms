@@ -11,11 +11,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, Sort } from '@angular/material/sort'; // Import MatSort
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { Observable } from 'rxjs';
-import { TableDetails } from '../../models/lms-models';
-import {
-  EntryDetails,
-  TopicDetails,
-} from '../../service/csv-data-service.service';
+import { EntryDetails, TableDetails, TopicDetails } from '../../models/lms-models';
 import { CommonService } from '../../service/common-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
 import { ConfirmDialogComponent } from '../base/confirm-dialog/confirm-dialog.component';
@@ -161,6 +157,14 @@ export class DiscussionsComponent
 
       if (isAUserEntry && !isBUserEntry) return -1;
       if (!isAUserEntry && isBUserEntry) return 1;
+
+      const aEntries = a.entries.length;
+      const bEntries = b.entries.length;
+
+      if (aEntries !== bEntries) {
+        return bEntries - aEntries; // Sort by number of entries descending
+      }
+
       return b.topic_created_at.localeCompare(a.topic_created_at);
     });
 
@@ -198,7 +202,7 @@ export class DiscussionsComponent
       displayName: '',
       cell: () => '',
       sortable: false, // Disable sorting for action column
-      filterable: true,
+      filterable: false,
     });
     displayedColumns.push('action');
 

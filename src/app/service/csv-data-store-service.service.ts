@@ -1,26 +1,18 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, map, of } from 'rxjs';
 import {
-  CsvDataService,
-  EnrollmentDetails,
-  LmsState,
-  TopicDetails,
-  UserDetails,
-} from './csv-data-service.service';
-import {
   Course,
   User,
   Enrollment,
   Topic,
   Entries,
   LoginUser,
+  AppState,
+  EnrollmentDetails,
+  TopicDetails,
+  UserDetails,
 } from '../models/lms-models';
-
-export interface AppState extends LmsState {
-  loading: boolean;
-  error: string | null;
-  currentUser: LoginUser | null; // Add currentUser to store the logged-in user
-}
+import { CsvDataService } from './csv-data-service.service';
 
 @Injectable({
   providedIn: 'root',

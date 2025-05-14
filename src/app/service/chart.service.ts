@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
+import { ChartDataset } from 'chart.js';
 import {
-  TopicDetails,
+  CommonChart,
+  Course,
+  Enrollment,
   EnrollmentDetails,
   EntryDetails,
-} from './csv-data-service.service';
-import { ChartDataset } from 'chart.js';
-import { Course, Enrollment, Topic } from '../models/lms-models';
-import { CommonChart } from '../components/dashboard/dashboard.component';
+  Topic,
+  TopicDetails,
+} from '../models/lms-models';
 
 @Injectable({
   providedIn: 'root',
@@ -80,7 +82,8 @@ export class ChartService {
 
     return {
       title: 'Entries per Course by Role',
-      subtitle: 'Entries by students vs. teachers for each course',
+      subtitle:
+        'Breaks down entries by students versus instructors for each course, offering a clear view of role-based contributions.',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -127,8 +130,9 @@ export class ChartService {
     ];
 
     return {
-      title: 'Entries by Students',
-      subtitle: 'Top 5 students by number of entries',
+      title: 'Top 5 Students by Entry Count',
+      subtitle:
+        'Identifies the top five students based on the number of entries, recognizing the most active participants.',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -166,8 +170,9 @@ export class ChartService {
     const data = sortedDates.map((key) => activityOverTime[key]);
 
     return {
-      title: 'Discussion Activity Over Time',
-      subtitle: 'Number of posts made over time',
+      title: 'Discussion Activity Trends',
+      subtitle:
+        'Tracks the number of posts over time, revealing patterns and peaks in discussion activity.',
       barChartLabels: labels,
       barChartData: [{ data, label: 'Discussion Activity' }],
       barChartType: 'line', // Change to 'bar' if you want a bar chart
@@ -234,7 +239,8 @@ export class ChartService {
 
     return {
       title: 'Engagement by Course',
-      subtitle: 'Top 5 students by number of entries',
+      subtitle:
+        'Showcases the top five students by entry count across courses, emphasizing high engagement in discussion activities.',
       barChartLabels: labels,
       barChartData,
       barChartType: 'bar',
@@ -284,8 +290,9 @@ export class ChartService {
     ];
 
     return {
-      title: 'Topics per Course',
-      subtitle: 'Number of topics created per course',
+      title: 'Course Topic Overview',
+      subtitle:
+        'View the number of topics created for each course, offering insights on creation activity.',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -332,8 +339,8 @@ export class ChartService {
     ];
 
     return {
-      title: 'Topics Over Time',
-      subtitle: 'Find the peak of creation',
+      title: 'Topic Creation Trends',
+      subtitle: 'Analyze topic creation over time to pinpoint peaks.',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'line',
@@ -369,8 +376,9 @@ export class ChartService {
     const barChartData: ChartDataset[] = [{ data, label: 'Topics' }];
 
     return {
-      title: 'Topic States Distribution',
-      subtitle: 'Track distribution state',
+      title: 'Topic Status Distribution',
+      subtitle:
+        'Monitor the distribution of states to track the progress and activity of topics.',
       barChartLabels: labels.length > 0 ? labels : ['No Data'],
       barChartData,
       barChartType: 'pie',
@@ -422,8 +430,9 @@ export class ChartService {
     ];
 
     return {
-      title: 'Topics by User',
-      subtitle: 'Top 5 posting frequency',
+      title: 'User Posting Activity',
+      subtitle:
+        'Identify the top five users by posting frequency, highlighting key contributors.',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -461,7 +470,8 @@ export class ChartService {
 
     return {
       title: 'Student Enrollments by Course',
-      subtitle: 'Number of enrollment per course',
+      subtitle:
+        'Displays the number of student enrollments for each course, providing insight into course popularity.',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'bar',
@@ -498,10 +508,11 @@ export class ChartService {
 
     return {
       title: 'Topics by Role',
-      subtitle: 'Comparison of topics posted by students vs teachers',
+      subtitle:
+        'Compares the number of topics created by students versus instructors, illustrating their respective contributions to course discussions.',
       barChartLabels: ['Students', 'Teachers'],
       barChartData,
-      barChartType: 'bar',
+      barChartType: 'doughnut',
       barChartLegend: true,
       height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
@@ -537,10 +548,11 @@ export class ChartService {
 
     return {
       title: 'Entries by Role',
-      subtitle: 'Comparison of entries posted by students vs teachers',
+      subtitle:
+        'Analyzes the volume of entries posted by students versus instructors, providing insight into their participation levels.',
       barChartLabels: ['Students', 'Teachers'],
       barChartData,
-      barChartType: 'pie',
+      barChartType: 'doughnut',
       barChartLegend: true,
       height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
@@ -582,8 +594,9 @@ export class ChartService {
     ];
 
     return {
-      title: 'Entries Over Time',
-      subtitle: 'Number of entries created per month',
+      title: 'Entry Creation Trends',
+      subtitle:
+        'Visualizes the number of entries created per month, enabling instructors to monitor participation trends.',
       barChartLabels: labels.length ? labels : ['No Data'],
       barChartData,
       barChartType: 'line', // You can change this to 'bar' if preferred
@@ -592,62 +605,6 @@ export class ChartService {
       maxValue: this.getMaxValue(barChartData),
     };
   }
-
-  createEnrollmentTrendChart(
-  courses: Course[],
-  enrollments: Enrollment[]
-): CommonChart {
-  const enrollmentsByMonth: { [key: string]: number } = {};
-  enrollments.forEach((enrollment) => {
-    if (enrollment.enrollment_state === 'active' && 
-        enrollment.enrollment_type === 'student') {
-      const course = courses.find(c => c.course_id === enrollment.course_id);
-      if (course) {
-        const date = new Date(course.course_created_at);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        
-        enrollmentsByMonth[monthKey] = (enrollmentsByMonth[monthKey] || 0) + 1;
-      }
-    }
-  });
-
-  // Sort the months chronologically
-  const sortedMonths = Object.keys(enrollmentsByMonth).sort();
-
-  // Calculate cumulative enrollments
-  const cumulativeEnrollments = sortedMonths.reduce((acc: number[], month) => {
-    const previousTotal = acc.length > 0 ? acc[acc.length - 1] : 0;
-    acc.push(previousTotal + enrollmentsByMonth[month]);
-    return acc;
-  }, []);
-
-  // Format labels to be more readable
-  const labels = sortedMonths.map(month => {
-    const [year, monthNum] = month.split('-');
-    const date = new Date(parseInt(year), parseInt(monthNum) - 1);
-    return date.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
-  });
-
-  const lineChartData: ChartDataset[] = [
-    {
-      data: cumulativeEnrollments,
-      label: 'Total Student Enrollments',
-      fill: false,
-      tension: 0.1 // Adds slight curve to lines
-    }
-  ];
-
-  return {
-    title: 'Course Enrollment Trend',
-    subtitle: 'Cumulative student enrollments over time',
-    barChartLabels: labels.length ? labels : ['No Data'],
-    barChartData: lineChartData,
-    barChartType: 'line', 
-    barChartLegend: true,
-    height: this.getDynamicVh(),
-    maxValue: this.getMaxValue(lineChartData),
-  };
-}
 
   private getMaxValue(barChartData: ChartDataset[]): number {
     const data = barChartData
@@ -672,5 +629,139 @@ export class ChartService {
     const counts: number[] = sorted.map(([, count]) => count);
 
     return { labels, counts };
+  }
+
+  createPerCourseEnrollmentTrendChart(
+    enrollments: EnrollmentDetails[]
+  ): CommonChart {
+    // Aggregate enrollments by course and month
+    const enrollmentsByCourseAndMonth: {
+      [courseId: number]: { [month: string]: number };
+    } = {};
+
+    enrollments.forEach((enrollment) => {
+      if (
+        enrollment.enrollment_state === 'active' &&
+        enrollment.enrollment_type === 'student'
+      ) {
+        const date = new Date(enrollment.user.user_created_at);
+        if (isNaN(date.getTime())) {
+          console.warn(
+            `Invalid date for course ${enrollment.course.course_id}: ${enrollment.course.course_created_at}`
+          );
+          return;
+        }
+        const monthKey = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, '0')}`;
+        const courseId = enrollment.course.course_id;
+        if (!enrollmentsByCourseAndMonth[courseId]) {
+          enrollmentsByCourseAndMonth[courseId] = {};
+        }
+        enrollmentsByCourseAndMonth[courseId][monthKey] =
+          (enrollmentsByCourseAndMonth[courseId][monthKey] || 0) + 1;
+      }
+    });
+
+    // Get all unique months across all courses
+    const allMonths = new Set<string>();
+    Object.values(enrollmentsByCourseAndMonth).forEach((courseMonths) => {
+      Object.keys(courseMonths).forEach((month) => allMonths.add(month));
+    });
+    const sortedMonths = Array.from(allMonths).sort();
+
+    // Create datasets for each course (non-cumulative)
+    const lineChartData: ChartDataset[] = [];
+    Object.keys(enrollmentsByCourseAndMonth).forEach((courseId) => {
+      const course = enrollments.find(
+        (e) => e.course.course_id === parseInt(courseId)
+      )?.course;
+      if (!course) return;
+
+      // Non-cumulative: number of enrollments per month
+      const enrollmentsPerMonth = sortedMonths.map(
+        (month) => enrollmentsByCourseAndMonth[parseInt(courseId)][month] || 0
+      );
+
+      lineChartData.push({
+        data: enrollmentsPerMonth,
+        label: `${course.course_code}: ${course.course_name}`,
+        fill: false,
+        tension: 0.1,
+      });
+    });
+
+    // Format labels as "MMM YYYY" (e.g., "May 2023")
+    const labels = sortedMonths.map((month) => {
+      const [year, monthNum] = month.split('-');
+      const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+      return date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+    });
+
+    // Handle empty data case
+    if (labels.length === 0 || lineChartData.length === 0) {
+      return {
+        title: 'Per-Course Enrollment Trend',
+        subtitle:
+          'Visualizes monthly enrollment trends across courses to track growth and engagement over time.',
+        barChartLabels: ['No Data'],
+        barChartData: [{ data: [0], label: 'No Enrollments', fill: false }],
+        barChartType: 'line',
+        barChartLegend: true,
+        height: this.getDynamicVh(),
+        maxValue: 0,
+      };
+    }
+
+    return {
+      title: 'Per-Course Enrollment Trend',
+      subtitle:
+        'Visualizes monthly enrollment trends across courses to track growth and engagement over time.',
+      barChartLabels: labels,
+      barChartData: lineChartData,
+      barChartType: 'line',
+      barChartLegend: true,
+      height: this.getDynamicVh(),
+      maxValue: this.getMaxValue(lineChartData),
+      displayLabel: false,
+    };
+  }
+
+  getTopicPopularityChart(topicsWithDetails: TopicDetails[]): CommonChart {
+    const topicData: Record<string, number> = {};
+
+    // Count entries per topic
+    for (const topic of topicsWithDetails) {
+      const topicId = topic.topic_id.toString();
+      const entryCount = topic.entries.length;
+      topicData[topicId] = (topicData[topicId] || 0) + entryCount;
+    }
+
+    // Map topic ID to topic name
+    const topicIdToName = (id: string) =>
+      topicsWithDetails.find((t) => t.topic_id.toString() === id)
+        ?.topic_title ?? '';
+
+    // Get Top 5 Labels and Counts for Topics
+    const { labels, counts: topicCounts } = this.getTop5SortedLabelsAndCounts(
+      topicData,
+      topicIdToName
+    );
+
+    const barChartData: ChartDataset[] = [
+      { data: topicCounts, label: 'Entries per Topic' },
+    ];
+
+    return {
+      title: 'Topic Popularity by Entry Count',
+      subtitle:
+        'Displays the number of entries for the top five most active topics, highlighting the most engaging discussions.',
+      barChartLabels: labels.length ? labels : ['No Data'],
+      barChartData,
+      barChartType: 'bar',
+      barChartLegend: true,
+      height: this.getDynamicVh(),
+      maxValue: this.getMaxValue(barChartData),
+    };
   }
 }

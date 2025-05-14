@@ -4,13 +4,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { BaseUserComponent } from '../base/base-user.component';
-
-interface MenuItem {
-  label: string;
-  icon: string;
-  link: string;
-  roles: string[];
-}
+import { MenuItem } from '../../models/lms-models';
 
 @Component({
   selector: 'app-nav',

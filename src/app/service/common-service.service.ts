@@ -1,13 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ChartDataset } from 'chart.js';
-
-interface ColumnDefinition<T> {
-  key: string;
-  displayName: string;
-  selector: (element: T) => T[keyof T];
-  sortable?: boolean;
-  filterable?: boolean;
-}
+import { ColumnDefinition } from '../models/lms-models';
 
 @Injectable({
   providedIn: 'root',

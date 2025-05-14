@@ -1,37 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, forkJoin, map, Observable } from 'rxjs';
-import { Course, Enrollment, Entries, Topic, User } from '../models/lms-models';
+import { Course, EnrollmentDetails, Entries, EntryDetails, LmsState, Topic, TopicDetails, User, UserDetails } from '../models/lms-models';
 import { DatePipe } from '@angular/common';
 
-export interface LmsState {
-  courses: Course[];
-  users: User[];
-  enrollments: Enrollment[];
-  topics: Topic[];
-  entries: Entries[];
-}
-
-export interface UserDetails extends User {
-  enrollment: Enrollment[];
-  course: Course[];
-}
-
-export interface EnrollmentDetails extends Enrollment {
-  user: User;
-  course: Course;
-  t: string;
-}
-
-export interface TopicDetails extends Topic {
-  course: Course;
-  topic_by_user: User;
-  entries: EntryDetails[];
-}
-
-export interface EntryDetails extends Entries {
-  entry_by_user: User;
-}
 
 @Injectable({
   providedIn: 'root',

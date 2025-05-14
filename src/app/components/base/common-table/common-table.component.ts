@@ -7,13 +7,9 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { TableDetails } from '../../../models/lms-models';
+import { TableDetails, TableRow } from '../../../models/lms-models';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
-
-export interface TableRow {
-  [key: string]: any;
-}
 
 @Component({
   selector: 'app-common-table',

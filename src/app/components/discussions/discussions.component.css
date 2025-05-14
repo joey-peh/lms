@@ -37,5 +37,32 @@ mat-card-title {
     var(--mat-sys-title-large-weight)
   );
   display: block;
-  margin: 15px 0;
+  margin: 0 15px 0 0;
+}
+
+mat-card-subtitle {
+  color: var(--mat-card-subtitle-text-color, var(--mat-sys-on-surface));
+  font-family: var(
+    --mat-card-subtitle-text-font,
+    var(--mat-sys-title-medium-font)
+  );
+  line-height: var(
+    --mat-card-subtitle-text-line-height,
+    var(--mat-sys-title-medium-line-height)
+  );
+  font-size: var(
+    --mat-card-subtitle-text-size,
+    var(--mat-sys-title-medium-size)
+  );
+  letter-spacing: var(
+    --mat-card-subtitle-text-tracking,
+    var(--mat-sys-title-medium-tracking)
+  );
+  font-weight: var(
+    --mat-card-subtitle-text-weight,
+    var(--mat-sys-title-medium-weight)
+  );
+  display: block;
+  margin: 0;
+  padding-top: 0;
 }

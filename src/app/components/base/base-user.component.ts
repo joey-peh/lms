@@ -1,11 +1,7 @@
 import { OnInit, OnDestroy, inject, Directive } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
-import { Course, LoginUser } from '../../models/lms-models';
-import {
-  EnrollmentDetails,
-  TopicDetails,
-} from '../../service/csv-data-service.service';
+import { Course, EnrollmentDetails, LoginUser, TopicDetails } from '../../models/lms-models';
 import { MatDialog } from '@angular/material/dialog';
 
 @Directive()

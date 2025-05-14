@@ -1,20 +1,17 @@
 import {
-  AfterViewInit,
   Component,
   inject,
   OnInit,
-  ViewChild,
+  ViewChild
 } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { TableDetails } from '../../models/lms-models';
-import { EnrollmentDetails } from '../../service/csv-data-service.service';
+import { MatPaginator } from '@angular/material/paginator';
+import { EnrollmentDetails, TableDetails, TableRow } from '../../models/lms-models';
 import { Observable } from 'rxjs';
 import { CommonService } from '../../service/common-service.service';
 import { BaseUserComponent } from '../base/base-user.component';
 import { ConfirmDialogComponent } from '../base/confirm-dialog/confirm-dialog.component';
-import { TableRow } from '../base/common-table/common-table.component';
 
 @Component({
   selector: 'app-user',
