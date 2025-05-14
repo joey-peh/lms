@@ -1,7 +1,12 @@
 import { OnInit, OnDestroy, inject, Directive } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
-import { Course, EnrollmentDetails, LoginUser, TopicDetails } from '../../models/lms-models';
+import {
+  Course,
+  EnrollmentDetails,
+  LoginUser,
+  TopicDetails,
+} from '../../models/lms-models';
 import { MatDialog } from '@angular/material/dialog';
 
 @Directive()
@@ -63,9 +68,28 @@ export abstract class BaseUserComponent implements OnInit, OnDestroy {
   }
 
   filterTopicDetails(topicDetails: TopicDetails[]): TopicDetails[] {
-    return topicDetails.filter((topic) =>
+    var topics = topicDetails.filter((topic) =>
       this.user.course_id.includes(topic.course_id)
     );
+
+    topics = topics.sort((a, b) => {
+      const isAUserEntry =
+        a.topic_posted_by_user_id.toString() === this.user.user_id;
+      const isBUserEntry =
+        b.topic_posted_by_user_id.toString() === this.user.user_id;
+
+      if (isAUserEntry && !isBUserEntry) return -1;
+      if (!isAUserEntry && isBUserEntry) return 1;
+
+      const aEntries = a.entries.length;
+      const bEntries = b.entries.length;
+
+      if (aEntries !== bEntries) {
+        return bEntries - aEntries; // Sort by number of entries descending
+      }
+
+      return b.topic_created_at.localeCompare(a.topic_created_at);
+    });
+    return topics;
   }
-  
 }

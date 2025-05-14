@@ -70,25 +70,6 @@ export class DiscussionsComponent
 
     this.topicDetails$.subscribe((topics) => {
       topics = this.filterTopicDetails(topics);
-
-      topics = topics.sort((a, b) => {
-        const isAUserEntry =
-          a.topic_posted_by_user_id.toString() === this.user.user_id;
-        const isBUserEntry =
-          b.topic_posted_by_user_id.toString() === this.user.user_id;
-
-        if (isAUserEntry && !isBUserEntry) return -1;
-        if (!isAUserEntry && isBUserEntry) return 1;
-
-        const aEntries = a.entries.length;
-        const bEntries = b.entries.length;
-
-        if (aEntries !== bEntries) {
-          return bEntries - aEntries; // Sort by number of entries descending
-        }
-
-        return b.topic_created_at.localeCompare(a.topic_created_at);
-      });
       this.configureDiscussionTable(topics);
       this.cdr.markForCheck();
     });
