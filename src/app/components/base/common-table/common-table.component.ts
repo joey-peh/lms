@@ -7,11 +7,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import {
-  TableDetails,
-  TableRow,
-  TopicDetails,
-} from '../../../models/lms-models';
+import { TableDetails, TableRow } from '../../../models/lms-models';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, Sort } from '@angular/material/sort';
@@ -31,6 +27,7 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
   @Input() deleteFn?: (data: any) => void;
   @Input() sortFn?: (data: any) => void;
   @Input() showDeleteButtonFn?: (element: any) => boolean;
+  @Input() selectRowFn?: (data: any) => void;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -128,6 +125,12 @@ export class CommonTableComponent implements AfterViewInit, OnInit {
 
         return String(valueA).localeCompare(String(valueB)) * (isAsc ? 1 : -1);
       });
+    }
+  }
+
+  selectRow(element: any) {
+    if (this.selectRowFn) {
+      this.selectRowFn(element);
     }
   }
 

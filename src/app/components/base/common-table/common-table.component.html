@@ -48,7 +48,11 @@
     >
 
     <tr mat-header-row *matHeaderRowDef="tableData.displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: tableData.displayedColumns"></tr>
+    <tr
+      mat-row
+      (click)="selectRow(row)"
+      *matRowDef="let row; columns: tableData.displayedColumns"
+    ></tr>
   </table>
   <mat-paginator
     #paginator
