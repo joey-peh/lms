@@ -129,10 +129,11 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       map(([courses, enrollments]) => {
         courses = this.filterCourse(courses);
         enrollments = this.filterEnrolment(enrollments);
-        return this.chartService.createEnrollmentChartStats(
+        return [this.chartService.createEnrollmentChartStats(
           courses,
           enrollments
-        );
+        ),
+               this.chartService.createEnrollmentTrendChart(courses, enrollments)];
       })
     );
 
