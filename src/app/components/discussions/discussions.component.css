@@ -20,6 +20,24 @@ table th {
   border-color: currentColor;
 }
 
+::ng-deep .mat-sort-header-content {
+  display: block !important;
+}
+
+::ng-deep .mat-sort-header-content input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 0 8px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
 mat-card-title {
   color: var(--mat-sidenav-content-text-color, var(--mat-sys-on-background));
   font-family: var(--mat-card-title-text-font, var(--mat-sys-title-large-font));

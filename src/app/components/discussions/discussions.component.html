@@ -1,7 +1,11 @@
 <div class="grid-container">
-  <div style="margin-bottom: 15px;">
-  <mat-card-title>Discussions</mat-card-title>
-  <mat-card-subtitle>Analyze discussion activity to gain insights into student engagement and topic relevance.</mat-card-subtitle></div>
+  <div style="margin-bottom: 15px">
+    <mat-card-title>Discussions</mat-card-title>
+    <mat-card-subtitle
+      >Analyze discussion activity to gain insights into student engagement and
+      topic relevance.</mat-card-subtitle
+    >
+  </div>
   <div>
     <div>
       <h3>Topics</h3>
@@ -30,7 +34,7 @@
                 (keyup)="applyFilter($event, column.columnDef)"
                 (click)="$event.stopPropagation()"
                 (keydown)="$event.stopPropagation()"
-                style="margin: 5px 0"
+                placeholder="Search"
               />
             </ng-container>
           </th>
