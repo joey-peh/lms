@@ -466,7 +466,7 @@ export class ChartService {
       barChartData,
       barChartType: 'bar',
       barChartLegend: true,
-      height: this.getDynamicVh(720),
+      height: this.getDynamicVh(),
       maxValue: this.getMaxValue(barChartData),
     };
   }
@@ -592,6 +592,62 @@ export class ChartService {
       maxValue: this.getMaxValue(barChartData),
     };
   }
+
+  createEnrollmentTrendChart(
+  courses: Course[],
+  enrollments: Enrollment[]
+): CommonChart {
+  const enrollmentsByMonth: { [key: string]: number } = {};
+  enrollments.forEach((enrollment) => {
+    if (enrollment.enrollment_state === 'active' && 
+        enrollment.enrollment_type === 'student') {
+      const course = courses.find(c => c.course_id === enrollment.course_id);
+      if (course) {
+        const date = new Date(course.course_created_at);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        enrollmentsByMonth[monthKey] = (enrollmentsByMonth[monthKey] || 0) + 1;
+      }
+    }
+  });
+
+  // Sort the months chronologically
+  const sortedMonths = Object.keys(enrollmentsByMonth).sort();
+
+  // Calculate cumulative enrollments
+  const cumulativeEnrollments = sortedMonths.reduce((acc: number[], month) => {
+    const previousTotal = acc.length > 0 ? acc[acc.length - 1] : 0;
+    acc.push(previousTotal + enrollmentsByMonth[month]);
+    return acc;
+  }, []);
+
+  // Format labels to be more readable
+  const labels = sortedMonths.map(month => {
+    const [year, monthNum] = month.split('-');
+    const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+    return date.toLocaleString('en-GB', { month: 'short', year: 'numeric' });
+  });
+
+  const lineChartData: ChartDataset[] = [
+    {
+      data: cumulativeEnrollments,
+      label: 'Total Student Enrollments',
+      fill: false,
+      tension: 0.1 // Adds slight curve to lines
+    }
+  ];
+
+  return {
+    title: 'Course Enrollment Trend',
+    subtitle: 'Cumulative student enrollments over time',
+    barChartLabels: labels.length ? labels : ['No Data'],
+    barChartData: lineChartData,
+    barChartType: 'line', 
+    barChartLegend: true,
+    height: this.getDynamicVh(),
+    maxValue: this.getMaxValue(lineChartData),
+  };
+}
 
   private getMaxValue(barChartData: ChartDataset[]): number {
     const data = barChartData
