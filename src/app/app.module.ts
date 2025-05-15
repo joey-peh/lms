@@ -34,6 +34,10 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from './components/base/confirm-dialog/confirm-dialog.component';
 import { MatSortModule } from '@angular/material/sort';
 import { CommonTableComponent } from './components/base/common-table/common-table.component';
+import { StoreModule } from '@ngrx/store';
+import { LmsEffects } from './store/effects/lms.effects';
+import { lmsReducer } from './store/reducers/lms.reducer';
+import { EffectsModule } from '@ngrx/effects';
 
 @NgModule({
   declarations: [
@@ -52,6 +56,8 @@ import { CommonTableComponent } from './components/base/common-table/common-tabl
   imports: [
     BrowserModule,
     AppRoutingModule,
+    StoreModule.forRoot({ lms: lmsReducer }),
+    EffectsModule.forRoot([LmsEffects]),
     FormsModule,
     MatToolbarModule,
     MatSidenavModule,

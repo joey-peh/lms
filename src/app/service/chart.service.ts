@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { ChartDataset } from 'chart.js';
 import {
   CommonChart,
@@ -9,11 +9,14 @@ import {
   Topic,
   TopicDetails,
 } from '../models/lms-models';
+import { LmsSandboxService } from '../store/sandbox/lms-sandbox-service';
+import { switchMap, map } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChartService {
+  private sandbox = Inject(LmsSandboxService);
   constructor() {}
 
   private getDynamicVh(referenceHeight: number = 288): string {
@@ -27,70 +30,68 @@ export class ChartService {
     return user?.enrollment_type?.toLowerCase();
   };
 
-  getEntriesPerCourse(
-    topicsWithDetails: TopicDetails[],
-    courses: Course[],
-    users: EnrollmentDetails[] // Added users to access roles
-  ): CommonChart {
-    const studentData: Record<string, number> = {};
-    const teacherData: Record<string, number> = {};
+  getEntriesPerCourse(): CommonChart {
+    return this.sandbox.getTopicDetails().pipe(
+      switchMap((topicsWithDetails: TopicDetails[]) =>
+        this.sandbox.getCourses().pipe(
+          switchMap((courses: Course[]) =>
+            this.sandbox.getEnrollmentDetails().pipe(
+              map((users: EnrollmentDetails[]) => {
+                const studentData: Record<string, number> = {};
+                const teacherData: Record<string, number> = {};
 
-    // Helper function to get the role of a user (Student or Teacher)
-    const getUserRole = (userId: string) => {
-      const user = users.find((u) => u.user_id.toString() === userId);
-      return user?.enrollment_type?.toLowerCase();
-    };
+                for (const topic of topicsWithDetails) {
+                  const courseId = topic.course_id.toString();
+                  for (const entry of topic.entries) {
+                    const userId = entry.entry_posted_by_user_id.toString();
+                    const role = this.getUserRole(userId, users);
+                    if (role === 'student') {
+                      studentData[courseId] = (studentData[courseId] || 0) + 1;
+                    } else if (role === 'teacher') {
+                      teacherData[courseId] = (teacherData[courseId] || 0) + 1;
+                    }
+                  }
+                }
 
-    for (const topic of topicsWithDetails) {
-      const courseId = topic.course_id.toString();
+                const courseIdToName = (id: string) =>
+                  courses.find((c) => c.course_id.toString() === id)
+                    ?.course_name ?? '';
 
-      for (const entry of topic.entries) {
-        const userId = entry.entry_posted_by_user_id.toString();
-        const role = getUserRole(userId); // Get role for the entry's user
+                const { labels, counts: studentCounts } =
+                  this.getTop5SortedLabelsAndCounts(
+                    studentData,
+                    courseIdToName
+                  );
 
-        if (role === 'student') {
-          // Increment student entry count for the course
-          studentData[courseId] = (studentData[courseId] || 0) + 1;
-        } else if (role === 'teacher') {
-          // Increment teacher entry count for the course
-          teacherData[courseId] = (teacherData[courseId] || 0) + 1;
-        }
-      }
-    }
+                const teacherCounts = labels.map((label: string) => {
+                  const id = Object.keys(teacherData).find(
+                    (courseId) => courseIdToName(courseId) === label
+                  );
+                  return id ? teacherData[id] || 0 : 0;
+                });
 
-    // Map course ID to course name
-    const courseIdToName = (id: string) =>
-      courses.find((c) => c.course_id.toString() === id)?.course_name ?? '';
+                const barChartData: ChartDataset[] = [
+                  { data: studentCounts, label: 'Entries by Students' },
+                  { data: teacherCounts, label: 'Entries by Teachers' },
+                ];
 
-    // Get Top 5 Labels and Counts for Students and Teachers
-    const { labels, counts: studentCounts } = this.getTop5SortedLabelsAndCounts(
-      studentData,
-      courseIdToName
+                return {
+                  title: 'Entries per Course by Role',
+                  subtitle:
+                    'Breaks down entries by students versus instructors for each course.',
+                  barChartLabels: labels.length ? labels : ['No Data'],
+                  barChartData,
+                  barChartType: 'bar',
+                  barChartLegend: true,
+                  height: this.getDynamicVh(),
+                  maxValue: this.getMaxValue(barChartData),
+                };
+              })
+            )
+          )
+        )
+      )
     );
-
-    const teacherCounts = labels.map((label: string) => {
-      const id = Object.keys(teacherData).find(
-        (courseId) => courseIdToName(courseId) === label
-      );
-      return id ? teacherData[id] || 0 : 0;
-    });
-
-    const barChartData: ChartDataset[] = [
-      { data: studentCounts, label: 'Entries by Students' },
-      { data: teacherCounts, label: 'Entries by Teachers' },
-    ];
-
-    return {
-      title: 'Entries per Course by Role',
-      subtitle:
-        'Breaks down entries by students versus instructors for each course, offering a clear view of role-based contributions.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
   }
 
   getEntriesByStudent(
