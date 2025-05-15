@@ -20,6 +20,8 @@
             class="form-control"
             matInput
             (keyup)="applyFilter($event, column.columnDef)"
+            (click)="$event.stopPropagation()"
+            (keydown)="$event.stopPropagation()"
             style="margin: 5px 0"
             placeholder="Search"
           />

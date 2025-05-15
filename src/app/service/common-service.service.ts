@@ -86,7 +86,7 @@ export class CommonService {
           displayName: this.formatDisplayName(key),
           cell: (element: T) => element[key as keyof T],
           sortable: true,
-          filterable: !['topic_created_at', 'topic_deleted_at'].includes(key),
+          filterable: true
         });
       });
     }
