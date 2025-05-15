@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { HttpClient } from '@angular/common/http';
 import { combineLatest, Observable, of } from 'rxjs';
-import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
+import { catchError, map, mergeMap } from 'rxjs/operators';
 import { DatePipe } from '@angular/common';
 import {
   loadData,
@@ -24,11 +24,9 @@ import {
 
 @Injectable()
 export class LmsEffects {
-  constructor(
-    private actions$: Actions,
-    private http: HttpClient,
-    private datePipe: DatePipe
-  ) {}
+  private actions$ = inject(Actions);
+  private http = inject(HttpClient);
+  private datePipe = inject(DatePipe);
 
   loadData$ = createEffect(() =>
     this.actions$.pipe(
@@ -64,16 +62,18 @@ export class LmsEffects {
       this.loadTopics(),
       this.loadEntries(),
     ]).pipe(
-      map(([courses, users, enrollments, topics, entries]) => ({
-        courses,
-        users,
-        enrollments,
-        topics,
-        entries,
-        loading: false,
-        error: null,
-        currentUser: null, // Or derive from auth service
-      }))
+      map(([courses, users, enrollments, topics, entries]) => {
+        return {
+          courses,
+          users,
+          enrollments,
+          topics,
+          entries,
+          loading: false,
+          error: null,
+          currentUser: null, // Or derive from auth service
+        };
+      })
     );
   }
 

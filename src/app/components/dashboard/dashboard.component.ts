@@ -28,11 +28,11 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
   private store = inject(CsvDataStoreService);
   private cdr = inject(ChangeDetectorRef);
   private chartService = inject(ChartService);
-  
+
   //start refactoring
   private sandbox = inject(LmsSandboxService);
   //end refactoring
-  
+
   courses$ = this.store.getCourses();
 
   miniCardData$: Observable<MiniCard[]>;
@@ -92,8 +92,9 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       this.courses$,
       this.store.getEnrollmentDetails(),
       this.store.getTopicDetails(),
+      this.chartService.getEntriesPerCourse(),
     ]).pipe(
-      map(([courses, users, topicDetails]) => {
+      map(([courses, users, topicDetails, getEntriesPerCourse]) => {
         courses = this.filterCourse(courses);
         users = this.filterEnrolment(users);
         topicDetails = this.filterTopicDetails(topicDetails);
@@ -103,7 +104,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
           this.chartService.getEngagementByCourse(topicDetails, courses, users),
           this.chartService.getDiscussionActivityOverTime(topicDetails),
           this.chartService.getEntriesOverTime(topicDetails),
-          this.chartService.getEntriesPerCourse()
+          getEntriesPerCourse,
         ];
         return commonChartList;
       })

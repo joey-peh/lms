@@ -10,14 +10,13 @@ import {
   TopicDetails,
 } from '../models/lms-models';
 import { LmsSandboxService } from '../store/sandbox/lms-sandbox-service';
-import { switchMap, map } from 'rxjs';
+import { switchMap, map, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChartService {
-  private sandbox = Inject(LmsSandboxService);
-  constructor() {}
+  constructor(private sandbox: LmsSandboxService) {}
 
   private getDynamicVh(referenceHeight: number = 288): string {
     const viewportHeight = window.innerHeight; // Current viewport height in pixels
@@ -30,7 +29,7 @@ export class ChartService {
     return user?.enrollment_type?.toLowerCase();
   };
 
-  getEntriesPerCourse(): CommonChart {
+  getEntriesPerCourse(): Observable<CommonChart> {
     return this.sandbox.getTopicDetails().pipe(
       switchMap((topicsWithDetails: TopicDetails[]) =>
         this.sandbox.getCourses().pipe(
@@ -85,7 +84,7 @@ export class ChartService {
                   barChartLegend: true,
                   height: this.getDynamicVh(),
                   maxValue: this.getMaxValue(barChartData),
-                };
+                } as CommonChart;
               })
             )
           )
