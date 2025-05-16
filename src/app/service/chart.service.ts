@@ -3,12 +3,7 @@ import { ChartDataset } from 'chart.js';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
-  CommonChart,
-  Course,
-  Enrollment,
-  EnrollmentDetails,
-  Topic,
-  TopicDetails,
+  CommonChart, EnrollmentDetails
 } from '../models/lms-models';
 import { LmsSandboxService } from '../store/sandbox/lms-sandbox-service';
 
