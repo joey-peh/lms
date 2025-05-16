@@ -1,788 +1,857 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ChartDataset } from 'chart.js';
+import { combineLatest, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
   CommonChart,
   Course,
   Enrollment,
   EnrollmentDetails,
-  EntryDetails,
   Topic,
   TopicDetails,
 } from '../models/lms-models';
+import { LmsSandboxService } from '../store/sandbox/lms-sandbox-service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChartService {
-  constructor() {}
+  private readonly sandbox = inject(LmsSandboxService);
 
   private getDynamicVh(referenceHeight: number = 288): string {
-    const viewportHeight = window.innerHeight; // Current viewport height in pixels
-    const vh = (referenceHeight / viewportHeight) * 100;
-    return `${vh.toFixed(2)}vh`; // Round to 2 decimal places
+    const vh = (referenceHeight / window.innerHeight) * 100;
+    return `${vh.toFixed(2)}vh`;
   }
 
-  getUserRole = (userId: string, users: EnrollmentDetails[]) => {
-    const user = users.find((u) => u.user_id.toString() === userId);
-    return user?.enrollment_type?.toLowerCase();
-  };
-
-  getEntriesPerCourse(
-    topicsWithDetails: TopicDetails[],
-    courses: Course[],
-    users: EnrollmentDetails[] // Added users to access roles
-  ): CommonChart {
-    const studentData: Record<string, number> = {};
-    const teacherData: Record<string, number> = {};
-
-    // Helper function to get the role of a user (Student or Teacher)
-    const getUserRole = (userId: string) => {
-      const user = users.find((u) => u.user_id.toString() === userId);
-      return user?.enrollment_type?.toLowerCase();
-    };
-
-    for (const topic of topicsWithDetails) {
-      const courseId = topic.course_id.toString();
-
-      for (const entry of topic.entries) {
-        const userId = entry.entry_posted_by_user_id.toString();
-        const role = getUserRole(userId); // Get role for the entry's user
-
-        if (role === 'student') {
-          // Increment student entry count for the course
-          studentData[courseId] = (studentData[courseId] || 0) + 1;
-        } else if (role === 'teacher') {
-          // Increment teacher entry count for the course
-          teacherData[courseId] = (teacherData[courseId] || 0) + 1;
-        }
-      }
-    }
-
-    // Map course ID to course name
-    const courseIdToName = (id: string) =>
-      courses.find((c) => c.course_id.toString() === id)?.course_name ?? '';
-
-    // Get Top 5 Labels and Counts for Students and Teachers
-    const { labels, counts: studentCounts } = this.getTop5SortedLabelsAndCounts(
-      studentData,
-      courseIdToName
-    );
-
-    const teacherCounts = labels.map((label: string) => {
-      const id = Object.keys(teacherData).find(
-        (courseId) => courseIdToName(courseId) === label
-      );
-      return id ? teacherData[id] || 0 : 0;
-    });
-
-    const barChartData: ChartDataset[] = [
-      { data: studentCounts, label: 'Entries by Students' },
-      { data: teacherCounts, label: 'Entries by Teachers' },
-    ];
-
-    return {
-      title: 'Entries per Course by Role',
-      subtitle:
-        'Breaks down entries by students versus instructors for each course, offering a clear view of role-based contributions.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  getEntriesByStudent(
-    topicsWithDetails: TopicDetails[],
-    users: EnrollmentDetails[]
-  ): CommonChart {
-    // Flatten all entries
-    const allEntries: EntryDetails[] = topicsWithDetails
-      .map((x) => x.entries)
-      .flat();
-
-    // Create a set of student user IDs for quick lookup
-    const studentIds = new Set(
-      users
-        .filter((u) => u.enrollment_type?.toLowerCase() === 'student')
-        .map((u) => u.user_id.toString())
-    );
-
-    // Count only student entries
-    const data: { [key: string]: number } = allEntries.reduce((acc, entry) => {
-      const userId = entry.entry_posted_by_user_id.toString();
-      if (studentIds.has(userId)) {
-        acc[userId] = (acc[userId] || 0) + 1;
-      }
-      return acc;
-    }, {} as { [key: string]: number });
-
-    // Convert user IDs to names and get top 5
-    const { labels, counts } = this.getTop5SortedLabelsAndCounts(
-      data,
-      (userId: string) =>
-        users.find((u) => u.user_id.toString() === userId)?.user.user_name ?? ''
-    );
-
-    const barChartData: ChartDataset[] = [
-      { data: counts, label: 'Student Entries' },
-    ];
-
-    return {
-      title: 'Top 5 Students by Entry Count',
-      subtitle:
-        'Identifies the top five students based on the number of entries, recognizing the most active participants.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  getDiscussionActivityOverTime(
-    topicsWithDetails: TopicDetails[]
-  ): CommonChart {
-    const activityOverTime: { [key: string]: number } = {};
-
-    // Count number of posts per day/week
-    for (const topic of topicsWithDetails) {
-      for (const entry of topic.entries) {
-        const dateStr = entry.entry_created_at;
-        if (dateStr && dateStr !== 'N/A') {
-          const date = new Date(
-            dateStr.split(', ')[0].split('/').reverse().join('-')
-          );
-          if (!isNaN(date.getTime())) {
-            const dateKey = `${date.getFullYear()}-${
-              date.getMonth() + 1
-            }-${date.getDate()}`;
-            activityOverTime[dateKey] = (activityOverTime[dateKey] || 0) + 1;
-          }
-        }
-      }
-    }
-
-    const sortedDates = Object.keys(activityOverTime).sort();
-    const labels = sortedDates;
-    const data = sortedDates.map((key) => activityOverTime[key]);
-
-    return {
-      title: 'Discussion Activity Trends',
-      subtitle:
-        'Tracks the number of posts over time, revealing patterns and peaks in discussion activity.',
-      barChartLabels: labels,
-      barChartData: [{ data, label: 'Discussion Activity' }],
-      barChartType: 'line', // Change to 'bar' if you want a bar chart
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue([{ data }]),
-    };
-  }
-
-  getEngagementByCourse(
-    topicsWithDetails: TopicDetails[],
-    courses: Course[],
-    users: EnrollmentDetails[]
-  ): CommonChart {
-    const engagementData: {
-      [courseId: string]: { [studentId: string]: number };
-    } = {};
-
-    for (const topic of topicsWithDetails) {
-      const courseId = topic.course_id.toString();
-      for (const entry of topic.entries) {
-        const studentId = entry.entry_posted_by_user_id.toString();
-        engagementData[courseId] = engagementData[courseId] || {};
-        engagementData[courseId][studentId] =
-          (engagementData[courseId][studentId] || 0) + 1;
-      }
-    }
-
-    const courseIdToName = (id: string) =>
-      courses.find((c) => c.course_id.toString() === id)?.course_name ?? '';
-
-    const usersById: Record<string, string> = {};
-    users.forEach((user) => {
-      usersById[user.user_id.toString()] = user.user.user_name;
-    });
-
-    const ids = Object.keys(engagementData); // courseIds
-    const labels = ids.map((id) => courseIdToName(id));
-
-    // 1. Total engagement per student
-    const totalByStudent: Record<string, number> = {};
-    for (const courseId of ids) {
-      const courseEngagement = engagementData[courseId];
-      for (const [studentId, count] of Object.entries(courseEngagement)) {
-        totalByStudent[studentId] = (totalByStudent[studentId] || 0) + count;
-      }
-    }
-    // 2. Get top 5 students
-    const topStudentIds = Object.entries(totalByStudent)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([studentId]) => studentId);
-
-    // 3. Generate chart data only for top 5
-    const barChartData: ChartDataset[] = topStudentIds.map((studentId) => {
-      const studentEngagements = ids.map(
-        (id) => engagementData[id]?.[studentId] ?? 0
-      );
-      return {
-        data: studentEngagements,
-        label: usersById[studentId],
-      };
-    });
-
-    return {
-      title: 'Engagement by Course',
-      subtitle:
-        'Showcases the top five students by entry count across courses, emphasizing high engagement in discussion activities.',
-      barChartLabels: labels,
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-      displayLabel: false,
-    };
-  }
-
-  getTopicsPerCourse(courses: Course[], topics: Topic[]): CommonChart {
-    const topicCountByState = (state: 'active' | 'inactive') =>
-      topics
-        .filter((topic) =>
-          state === 'active'
-            ? topic.topic_state === 'active'
-            : topic.topic_state !== 'active'
-        )
-        .reduce((acc, course) => {
-          const courseId = course.course_id;
-          acc[courseId] = (acc[courseId] || 0) + 1;
-          return acc;
-        }, {} as { [key: string]: number });
-
-    const activeData = topicCountByState('active');
-    const inactiveData = topicCountByState('inactive');
-
-    const mapCourseToName = (courseId: string): string =>
-      courses.find((c) => c.course_id.toString() === courseId)?.course_name ??
-      '';
-
-    const { labels, counts: activeCounts } = this.getTop5SortedLabelsAndCounts(
-      activeData,
-      mapCourseToName
-    );
-
-    const inactiveCounts = labels.map((label: string) => {
-      const courseId = Object.keys(inactiveData).find(
-        (id) => mapCourseToName(id) === label
-      );
-      return courseId ? inactiveData[courseId] || 0 : 0;
-    });
-
-    const barChartData: ChartDataset[] = [
-      { data: activeCounts, label: 'Active Topics' },
-      { data: inactiveCounts, label: 'Inactive Topics' },
-    ];
-
-    return {
-      title: 'Course Topic Overview',
-      subtitle:
-        'View the number of topics created for each course, offering insights on creation activity.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-  getTopicsOverTime(topics: Topic[]): CommonChart {
-    const activeByMonth: Record<string, number> = {};
-    const inactiveByMonth: Record<string, number> = {};
-
-    topics.forEach((topic) => {
-      const dateStr = topic.topic_created_at;
-      if (dateStr && dateStr !== 'N/A') {
-        // Convert dd/MM/yyyy to yyyy-MM-dd
-        const date = new Date(
-          dateStr.split(', ')[0].split('/').reverse().join('-')
-        );
-        if (!isNaN(date.getTime())) {
-          const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`; // e.g. 2024-5
-
-          const target =
-            topic.topic_state === 'active' ? activeByMonth : inactiveByMonth;
-
-          target[monthYear] = (target[monthYear] || 0) + 1;
-        }
-      }
-    });
-
-    // Get union of all month keys
-    const allMonths = Array.from(
-      new Set([...Object.keys(activeByMonth), ...Object.keys(inactiveByMonth)])
-    ).sort();
-
-    const labels = allMonths;
-
-    const activeCounts = labels.map((key) => activeByMonth[key] || 0);
-    const inactiveCounts = labels.map((key) => inactiveByMonth[key] || 0);
-
-    const barChartData: ChartDataset[] = [
-      { data: activeCounts, label: 'Active Topics' },
-      { data: inactiveCounts, label: 'Inactive Topics' },
-    ];
-
-    return {
-      title: 'Topic Creation Trends',
-      subtitle: 'Analyze topic creation over time to pinpoint peaks.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'line',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  getTopicStatesDistribution(topics: Topic[]): CommonChart {
-    const stateCounts = {
-      active: topics.filter((topic) => topic.topic_state === 'active').length,
-      unpublished: topics.filter((topic) => topic.topic_state === 'unpublished')
-        .length,
-      deleted: topics.filter((topic) => topic.topic_state === 'deleted').length,
-    };
-
-    const rawLabels = ['Active', 'Unpublished', 'Deleted'];
-    const rawData = [
-      stateCounts.active,
-      stateCounts.unpublished,
-      stateCounts.deleted,
-    ];
-
-    // Filter out labels and data where count is 0
-    const filtered = rawLabels
-      .map((label, i) => ({ label, count: rawData[i] }))
-      .filter((item) => item.count > 0);
-
-    const labels = filtered.map((item) => item.label);
-    const data = filtered.map((item) => item.count);
-
-    const barChartData: ChartDataset[] = [{ data, label: 'Topics' }];
-
-    return {
-      title: 'Topic Status Distribution',
-      subtitle:
-        'Monitor the distribution of states to track the progress and activity of topics.',
-      barChartLabels: labels.length > 0 ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'pie',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  getTopicsPerUser(users: EnrollmentDetails[], topics: Topic[]): CommonChart {
-    const userIdToUserName = new Map(
-      users.map((user) => [user.user_id.toString(), user.user.user_name])
-    );
-
-    const topicCountByState = (state: 'active' | 'inactive') =>
-      topics
-        .filter((topic) =>
-          state === 'active'
-            ? topic.topic_state === 'active'
-            : topic.topic_state !== 'active'
-        )
-        .reduce((acc: Record<string, number>, topic) => {
-          const userId = topic.topic_posted_by_user_id;
-          acc[userId] = (acc[userId] || 0) + 1;
-          return acc;
-        }, {});
-
-    const activeData = topicCountByState('active');
-    const inactiveData = topicCountByState('inactive');
-
-    const mapUserIdToName = (userId: string) =>
-      userIdToUserName.get(userId) ?? '';
-
-    const { labels, counts: activeCounts } = this.getTop5SortedLabelsAndCounts(
-      activeData,
-      mapUserIdToName
-    );
-
-    const inactiveCounts = labels.map((label: string) => {
-      const userId = Object.keys(inactiveData).find(
-        (id) => mapUserIdToName(id) === label
-      );
-      return userId ? inactiveData[userId] || 0 : 0;
-    });
-
-    const barChartData: ChartDataset[] = [
-      { data: activeCounts, label: 'Active Topics' },
-      { data: inactiveCounts, label: 'Inactive Topics' },
-    ];
-
-    return {
-      title: 'User Posting Activity',
-      subtitle:
-        'Identify the top five users by posting frequency, highlighting key contributors.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  createEnrollmentChartStats(
-    courses: Course[],
-    enrollments: Enrollment[]
-  ): CommonChart {
-    const data: { [key: string]: number } = courses.reduce((acc, course) => {
-      const enrollmentCount = enrollments.filter(
-        (e) =>
-          e.course_id === course.course_id &&
-          e.enrollment_state === 'active' &&
-          e.enrollment_type === 'student'
-      ).length;
-      acc[course.course_id.toString()] = enrollmentCount;
-      return acc;
-    }, {} as { [key: string]: number });
-
-    const { labels, counts } = this.getTop5SortedLabelsAndCounts(
-      data,
-      (courseId: string) =>
-        courses.find((c) => c.course_id.toString() === courseId)?.course_name ??
-        ''
-    );
-
-    const barChartData: ChartDataset[] = [
-      { data: counts, label: 'Student Enrollments' },
-    ];
-
-    return {
-      title: 'Student Enrollments by Course',
-      subtitle:
-        'Displays the number of student enrollments for each course, providing insight into course popularity.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  getTopicsByRole(
-    topics: TopicDetails[],
-    users: EnrollmentDetails[]
-  ): CommonChart {
-    const counts = { Student: 0, Teacher: 0 };
-
-    const getRole = (userId: string) =>
-      users
-        .find((u) => u.user_id.toString() === userId)
-        ?.enrollment_type?.toLowerCase();
-
-    for (const topic of topics) {
-      const userId = topic.topic_posted_by_user_id.toString();
-      const role = getRole(userId);
-      if (role === 'student') {
-        counts.Student += 1;
-      } else if (role === 'teacher') {
-        counts.Teacher += 1;
-      }
-    }
-
-    const barChartData: ChartDataset[] = [
-      { data: [counts.Student, counts.Teacher], label: 'Topics Created' },
-    ];
-
-    return {
-      title: 'Topics by Role',
-      subtitle:
-        'Compares the number of topics created by students versus instructors, illustrating their respective contributions to course discussions.',
-      barChartLabels: ['Students', 'Teachers'],
-      barChartData,
-      barChartType: 'doughnut',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  getEntriesByRole(
-    topicsWithDetails: TopicDetails[],
-    users: EnrollmentDetails[]
-  ): CommonChart {
-    const counts = { Student: 0, Teacher: 0 };
-
-    const getRole = (userId: string) =>
-      users
-        .find((u) => u.user_id.toString() === userId)
-        ?.enrollment_type?.toLowerCase();
-
-    for (const topic of topicsWithDetails) {
-      for (const entry of topic.entries) {
-        const userId = entry.entry_posted_by_user_id.toString();
-        const role = getRole(userId);
-        if (role === 'student') {
-          counts.Student += 1;
-        } else if (role === 'teacher') {
-          counts.Teacher += 1;
-        }
-      }
-    }
-
-    const barChartData: ChartDataset[] = [
-      { data: [counts.Student, counts.Teacher], label: 'Entries Posted' },
-    ];
-
-    return {
-      title: 'Entries by Role',
-      subtitle:
-        'Analyzes the volume of entries posted by students versus instructors, providing insight into their participation levels.',
-      barChartLabels: ['Students', 'Teachers'],
-      barChartData,
-      barChartType: 'doughnut',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  getEntriesOverTime(topicsWithDetails: TopicDetails[]): CommonChart {
-    // Dictionary to store the count of entries per month
-    const entriesByMonth: { [key: string]: number } = {};
-
-    // Loop through each topic and its entries
-    for (const topic of topicsWithDetails) {
-      for (const entry of topic.entries) {
-        const dateStr = entry.entry_created_at; // Assuming this field exists
-        if (dateStr && dateStr !== 'N/A') {
-          // Parse date string (Assumes format "dd/MM/yyyy")
-          const date = new Date(
-            dateStr.split(', ')[0].split('/').reverse().join('-')
-          );
-          if (!isNaN(date.getTime())) {
-            // Format the date as "YYYY-MM"
-            const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`;
-
-            // Increment entry count for this month
-            entriesByMonth[monthYear] = (entriesByMonth[monthYear] || 0) + 1;
-          }
-        }
-      }
-    }
-
-    // Sort months in chronological order
-    const sortedMonths = Object.keys(entriesByMonth).sort();
-    const labels = sortedMonths;
-    const data = sortedMonths.map((key) => entriesByMonth[key]);
-
-    // Prepare the chart data
-    const barChartData: ChartDataset[] = [
-      { data: labels.length ? data : [0], label: 'Entries Over Time' },
-    ];
-
-    return {
-      title: 'Entry Creation Trends',
-      subtitle:
-        'Visualizes the number of entries created per month, enabling instructors to monitor participation trends.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'line', // You can change this to 'bar' if preferred
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
-  }
-
-  private getMaxValue(barChartData: ChartDataset[]): number {
-    const data = barChartData
-      .flatMap((dataset) =>
-        Array.isArray(dataset.data)
-          ? dataset.data.filter((val): val is number => val != null)
-          : []
-      )
+  private getMaxValue(datasets: ChartDataset[]): number {
+    const values = datasets
+      .flatMap((dataset) => dataset.data as number[])
       .filter((val) => val > 0);
-    return data.length ? Math.ceil(Math.max(...data) * 1.2) : 1;
+    return values.length ? Math.ceil(Math.max(...values) * 1.2) : 1;
   }
 
   private getTop5SortedLabelsAndCounts(
-    data: { [key: string]: number },
+    data: Record<string, number>,
     mapKeyToLabel: (key: string) => string
   ): { labels: string[]; counts: number[] } {
     const sorted = Object.entries(data)
-      .sort((a, b) => b[1] - a[1]) // Sort by count in descending order
-      .slice(0, 5); // Limit to top 5
-
-    const labels: string[] = sorted.map(([key]) => mapKeyToLabel(key));
-    const counts: number[] = sorted.map(([, count]) => count);
-
-    return { labels, counts };
-  }
-
-  createPerCourseEnrollmentTrendChart(
-    enrollments: EnrollmentDetails[]
-  ): CommonChart {
-    // Aggregate enrollments by course and month
-    const enrollmentsByCourseAndMonth: {
-      [courseId: number]: { [month: string]: number };
-    } = {};
-
-    enrollments.forEach((enrollment) => {
-      if (
-        enrollment.enrollment_state === 'active' &&
-        enrollment.enrollment_type === 'student'
-      ) {
-        let date = new Date(enrollment.user.user_created_at);
-
-        if (isNaN(date.getTime())) {
-          date = this.parseCustomDate(enrollment.user.user_created_at);
-        }
-
-        if (isNaN(date.getTime())) {
-          console.warn('warning', enrollment.user.user_created_at);
-          return;
-        }
-        const monthKey = `${date.getFullYear()}-${String(
-          date.getMonth() + 1
-        ).padStart(2, '0')}`;
-        const courseId = enrollment.course.course_id;
-        if (!enrollmentsByCourseAndMonth[courseId]) {
-          enrollmentsByCourseAndMonth[courseId] = {};
-        }
-        enrollmentsByCourseAndMonth[courseId][monthKey] =
-          (enrollmentsByCourseAndMonth[courseId][monthKey] || 0) + 1;
-      }
-    });
-
-    // Get all unique months across all courses
-    const allMonths = new Set<string>();
-    Object.values(enrollmentsByCourseAndMonth).forEach((courseMonths) => {
-      Object.keys(courseMonths).forEach((month) => allMonths.add(month));
-    });
-    const sortedMonths = Array.from(allMonths).sort();
-
-    // Create datasets for each course (non-cumulative)
-    const lineChartData: ChartDataset[] = [];
-    Object.keys(enrollmentsByCourseAndMonth).forEach((courseId) => {
-      const course = enrollments.find(
-        (e) => e.course.course_id === parseInt(courseId)
-      )?.course;
-      if (!course) return;
-
-      // Non-cumulative: number of enrollments per month
-      const enrollmentsPerMonth = sortedMonths.map(
-        (month) => enrollmentsByCourseAndMonth[parseInt(courseId)][month] || 0
-      );
-
-      lineChartData.push({
-        data: enrollmentsPerMonth,
-        label: `${course.course_code}: ${course.course_name}`,
-        fill: false,
-        tension: 0.1,
-      });
-    });
-
-    // Format labels as "MMM YYYY" (e.g., "May 2023")
-    const labels = sortedMonths.map((month) => {
-      const [year, monthNum] = month.split('-');
-      const date = new Date(parseInt(year), parseInt(monthNum) - 1);
-      return date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
-    });
-
-    // Handle empty data case
-    if (labels.length === 0 || lineChartData.length === 0) {
-      return {
-        title: 'Per-Course Enrollment Trend',
-        subtitle:
-          'Displays monthly enrollment trends across courses to monitor growth and user engagement over time. Assumption: user.user_created_at represents the enrollment date for a course.',
-        barChartLabels: ['No Data'],
-        barChartData: [{ data: [0], label: 'No Enrollments', fill: false }],
-        barChartType: 'line',
-        barChartLegend: true,
-        height: this.getDynamicVh(),
-        maxValue: 0,
-      };
-    }
-
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5);
     return {
-      title: 'Per-Course Enrollment Trend',
-      subtitle:
-        'Displays monthly enrollment trends across courses to monitor growth and user engagement over time. Assumption: user.user_created_at represents the enrollment date for a course.',
-      barChartLabels: labels,
-      barChartData: lineChartData,
-      barChartType: 'line',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(lineChartData),
-      displayLabel: false,
+      labels: sorted.map(([key]) => mapKeyToLabel(key)).filter(Boolean),
+      counts: sorted.map(([, count]) => count),
     };
   }
 
-  parseCustomDate(dateStr: string): Date {
+  private getRole(
+    userId: string,
+    users: EnrollmentDetails[]
+  ): 'student' | 'teacher' | null {
+    const user = users.find((u) => u.user_id.toString() === userId);
+    return user?.enrollment_type?.toLowerCase() as 'student' | 'teacher' | null;
+  }
+
+  private parseDate(dateStr: string | null | undefined): Date | null {
+    if (!dateStr || dateStr === 'N/A') return null;
     const match = dateStr.match(
       /^(\d{2})\/(\d{2})\/(\d{4}), (\d{2}):(\d{2}):(\d{2}) (AM|PM)$/
     );
-    if (!match) return new Date(''); // Invalid format
+    if (!match) return null;
 
-    let [, day, month, year, hour, minute, second, period] = match;
+    const [, day, month, year, hour, minute, second, period] = match;
     let h = parseInt(hour, 10);
     if (period === 'PM' && h < 12) h += 12;
     if (period === 'AM' && h === 12) h = 0;
 
-    return new Date(
-      `${year}-${month}-${day}T${h
-        .toString()
-        .padStart(2, '0')}:${minute}:${second}`
+    const isoDate = `${year}-${month}-${day}T${h
+      .toString()
+      .padStart(2, '0')}:${minute}:${second}`;
+    const date = new Date(isoDate);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  private formatMonthYear(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}`;
+  }
+
+  private formatDateLabel(date: Date): string {
+    return date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+  }
+
+  private createChart({
+    title,
+    subtitle,
+    labels,
+    datasets,
+    type = 'bar',
+    legend = true,
+    displayLabel = true,
+  }: {
+    title: string;
+    subtitle: string;
+    labels: string[];
+    datasets: ChartDataset[];
+    type?: CommonChart['barChartType'];
+    legend?: boolean;
+    displayLabel?: boolean;
+  }): CommonChart {
+    return {
+      title,
+      subtitle,
+      barChartLabels: labels.length ? labels : ['No Data'],
+      barChartData: datasets.length
+        ? datasets
+        : [{ data: [0], label: 'No Data' }],
+      barChartType: type,
+      barChartLegend: legend,
+      height: this.getDynamicVh(),
+      maxValue: this.getMaxValue(datasets),
+      displayLabel,
+    };
+  }
+
+  getEntriesPerCourse(): Observable<CommonChart> {
+    return combineLatest([
+      this.sandbox.getTopicDetails(),
+      this.sandbox.getCourses(),
+      this.sandbox.getEnrollmentDetails(),
+    ]).pipe(
+      map(([topics, courses, users]) => {
+        const studentData: Record<string, number> = {};
+        const teacherData: Record<string, number> = {};
+
+        topics.forEach((topic) => {
+          const courseId = topic.course_id.toString();
+          topic.entries.forEach((entry) => {
+            const userId = entry.entry_posted_by_user_id.toString();
+            const role = this.getRole(userId, users);
+            if (role === 'student') {
+              studentData[courseId] = (studentData[courseId] || 0) + 1;
+            } else if (role === 'teacher') {
+              teacherData[courseId] = (teacherData[courseId] || 0) + 1;
+            }
+          });
+        });
+
+        const courseIdToName = (id: string) =>
+          courses.find((c) => c.course_id.toString() === id)?.course_name ?? '';
+
+        const { labels, counts: studentCounts } =
+          this.getTop5SortedLabelsAndCounts(studentData, courseIdToName);
+
+        const teacherCounts = labels.map((label) => {
+          const courseId = Object.keys(teacherData).find(
+            (id) => courseIdToName(id) === label
+          );
+          return courseId ? teacherData[courseId] || 0 : 0;
+        });
+
+        const datasets: ChartDataset[] = [
+          {
+            data: studentCounts,
+            label: 'Entries by Students',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+          },
+          {
+            data: teacherCounts,
+            label: 'Entries by Teachers',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+          },
+        ];
+
+        return this.createChart({
+          title: 'Entries per Course by Role',
+          subtitle:
+            'Breaks down entries by students versus instructors for each course.',
+          labels,
+          datasets,
+        });
+      })
     );
   }
 
-  getTopicPopularityChart(topicsWithDetails: TopicDetails[]): CommonChart {
-    const topicData: Record<string, number> = {};
+  getEntriesByStudent(): Observable<CommonChart> {
+    return combineLatest([
+      this.sandbox.getTopicDetails(),
+      this.sandbox.getEnrollmentDetails(),
+    ]).pipe(
+      map(([topics, users]) => {
+        const studentIds = new Set(
+          users
+            .filter((u) => u.enrollment_type?.toLowerCase() === 'student')
+            .map((u) => u.user_id.toString())
+        );
+        const data = topics
+          .flatMap((t) => t.entries)
+          .reduce((acc: Record<string, number>, entry) => {
+            const userId = entry.entry_posted_by_user_id.toString();
+            if (studentIds.has(userId)) {
+              acc[userId] = (acc[userId] || 0) + 1;
+            }
+            return acc;
+          }, {});
 
-    // Count entries per topic
-    for (const topic of topicsWithDetails) {
-      const topicId = topic.topic_id.toString();
-      const entryCount = topic.entries.length;
-      topicData[topicId] = (topicData[topicId] || 0) + entryCount;
-    }
+        const { labels, counts } = this.getTop5SortedLabelsAndCounts(
+          data,
+          (userId) =>
+            users.find((u) => u.user_id.toString() === userId)?.user
+              .user_name ?? ''
+        );
 
-    // Map topic ID to topic name
-    const topicIdToName = (id: string) =>
-      topicsWithDetails.find((t) => t.topic_id.toString() === id)
-        ?.topic_title ?? '';
-
-    // Get Top 5 Labels and Counts for Topics
-    const { labels, counts: topicCounts } = this.getTop5SortedLabelsAndCounts(
-      topicData,
-      topicIdToName
+        return this.createChart({
+          title: 'Top 5 Students by Entry Count',
+          subtitle:
+            'Identifies the top five students based on the number of entries.',
+          labels,
+          datasets: [
+            {
+              data: counts,
+              label: 'Student Entries',
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1,
+            },
+          ],
+        });
+      })
     );
+  }
 
-    const barChartData: ChartDataset[] = [
-      { data: topicCounts, label: 'Entries per Topic' },
-    ];
+  getDiscussionActivityOverTime(): Observable<CommonChart> {
+    return this.sandbox.getTopicDetails().pipe(
+      map((topics) => {
+        const activityByDate = topics
+          .flatMap((t) => t.entries)
+          .reduce((acc: Record<string, number>, entry) => {
+            const date = this.parseDate(entry.entry_created_at);
+            if (date) {
+              const dateKey = `${date.getFullYear()}-${
+                date.getMonth() + 1
+              }-${date.getDate()}`;
+              acc[dateKey] = (acc[dateKey] || 0) + 1;
+            }
+            return acc;
+          }, {});
 
-    return {
-      title: 'Topic Popularity by Entry Count',
-      subtitle:
-        'Displays the number of entries for the top five most active topics, highlighting the most engaging discussions.',
-      barChartLabels: labels.length ? labels : ['No Data'],
-      barChartData,
-      barChartType: 'bar',
-      barChartLegend: true,
-      height: this.getDynamicVh(),
-      maxValue: this.getMaxValue(barChartData),
-    };
+        const sortedDates = Object.keys(activityByDate).sort();
+        const labels = sortedDates;
+        const data = sortedDates.map((key) => activityByDate[key]);
+
+        return this.createChart({
+          title: 'Discussion Activity Trends',
+          subtitle:
+            'Tracks the number of posts over time, revealing patterns and peaks.',
+          labels,
+          datasets: [
+            {
+              data,
+              label: 'Discussion Activity',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1,
+              fill: false,
+              tension: 0.1,
+            },
+          ],
+          type: 'line',
+        });
+      })
+    );
+  }
+
+  getEngagementByCourse(): Observable<CommonChart> {
+    return combineLatest([
+      this.sandbox.getTopicDetails(),
+      this.sandbox.getCourses(),
+      this.sandbox.getEnrollmentDetails(),
+    ]).pipe(
+      map(([topics, courses, users]) => {
+        const engagementData: Record<string, Record<string, number>> = {};
+        topics.forEach((topic) => {
+          const courseId = topic.course_id.toString();
+          engagementData[courseId] = engagementData[courseId] || {};
+          topic.entries.forEach((entry) => {
+            const studentId = entry.entry_posted_by_user_id.toString();
+            engagementData[courseId][studentId] =
+              (engagementData[courseId][studentId] || 0) + 1;
+          });
+        });
+
+        const courseIdToName = (id: string) =>
+          courses.find((c) => c.course_id.toString() === id)?.course_name ?? '';
+        const userIdToName = (id: string) =>
+          users.find((u) => u.user_id.toString() === id)?.user.user_name ?? '';
+
+        const totalByStudent = Object.keys(engagementData).reduce(
+          (acc: Record<string, number>, courseId) => {
+            Object.entries(engagementData[courseId]).forEach(
+              ([studentId, count]) => {
+                acc[studentId] = (acc[studentId] || 0) + count;
+              }
+            );
+            return acc;
+          },
+          {}
+        );
+
+        const topStudentIds = Object.entries(totalByStudent)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 5)
+          .map(([studentId]) => studentId);
+
+        const labels = Object.keys(engagementData)
+          .map(courseIdToName)
+          .filter(Boolean);
+        const datasets: ChartDataset[] = topStudentIds.map(
+          (studentId, index) => ({
+            data: Object.keys(engagementData).map(
+              (courseId) => engagementData[courseId][studentId] || 0
+            ),
+            label: userIdToName(studentId),
+            backgroundColor: `rgba(${(index * 50) % 255}, 162, ${
+              (index * 100) % 255
+            }, 0.2)`,
+            borderColor: `rgba(${(index * 50) % 255}, 162, ${
+              (index * 100) % 255
+            }, 1)`,
+            borderWidth: 1,
+          })
+        );
+
+        return this.createChart({
+          title: 'Engagement by Course',
+          subtitle:
+            'Showcases the top five students by entry count across courses.',
+          labels,
+          datasets,
+          displayLabel: false,
+        });
+      })
+    );
+  }
+
+  getTopicsPerCourse(): Observable<CommonChart> {
+    return combineLatest([
+      this.sandbox.getCourses(),
+      this.sandbox.getTopics(),
+    ]).pipe(
+      map(([courses, topics]) => {
+        const countTopicsByState = (state: 'active' | 'inactive') =>
+          topics
+            .filter((t) =>
+              state === 'active'
+                ? t.topic_state === 'active'
+                : t.topic_state !== 'active'
+            )
+            .reduce((acc: Record<string, number>, t) => {
+              const courseId = t.course_id.toString();
+              acc[courseId] = (acc[courseId] || 0) + 1;
+              return acc;
+            }, {});
+
+        const activeData = countTopicsByState('active');
+        const inactiveData = countTopicsByState('inactive');
+        const courseIdToName = (id: string) =>
+          courses.find((c) => c.course_id.toString() === id)?.course_name ?? '';
+
+        const { labels, counts: activeCounts } =
+          this.getTop5SortedLabelsAndCounts(activeData, courseIdToName);
+        const inactiveCounts = labels.map((label) => {
+          const courseId = Object.keys(inactiveData).find(
+            (id) => courseIdToName(id) === label
+          );
+          return courseId ? inactiveData[courseId] || 0 : 0;
+        });
+
+        const datasets: ChartDataset[] = [
+          {
+            data: activeCounts,
+            label: 'Active Topics',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+          },
+          {
+            data: inactiveCounts,
+            label: 'Inactive Topics',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+          },
+        ];
+
+        return this.createChart({
+          title: 'Course Topic Overview',
+          subtitle: 'View the number of topics created for each course.',
+          labels,
+          datasets,
+        });
+      })
+    );
+  }
+
+  getTopicsOverTime(): Observable<CommonChart> {
+    return this.sandbox.getTopics().pipe(
+      map((topics) => {
+        const countsByMonth = topics.reduce(
+          (
+            acc: {
+              active: Record<string, number>;
+              inactive: Record<string, number>;
+            },
+            topic
+          ) => {
+            const date = this.parseDate(topic.topic_created_at);
+            if (date) {
+              const monthYear = this.formatMonthYear(date);
+              const target =
+                topic.topic_state === 'active' ? acc.active : acc.inactive;
+              target[monthYear] = (target[monthYear] || 0) + 1;
+            }
+            return acc;
+          },
+          { active: {}, inactive: {} }
+        );
+
+        const allMonths = Array.from(
+          new Set([
+            ...Object.keys(countsByMonth.active),
+            ...Object.keys(countsByMonth.inactive),
+          ])
+        ).sort();
+        const activeCounts = allMonths.map(
+          (key) => countsByMonth.active[key] || 0
+        );
+        const inactiveCounts = allMonths.map(
+          (key) => countsByMonth.inactive[key] || 0
+        );
+
+        return this.createChart({
+          title: 'Topic Creation Trends',
+          subtitle: 'Analyze topic creation over time to pinpoint peaks.',
+          labels: allMonths.map((month) => {
+            const [year, monthNum] = month.split('-').map(Number);
+            return this.formatDateLabel(new Date(year, monthNum - 1));
+          }),
+          datasets: [
+            {
+              data: activeCounts,
+              label: 'Active Topics',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1,
+              fill: false,
+              tension: 0.1,
+            },
+            {
+              data: inactiveCounts,
+              label: 'Inactive Topics',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1,
+              fill: false,
+              tension: 0.1,
+            },
+          ],
+          type: 'line',
+        });
+      })
+    );
+  }
+
+  getTopicStatesDistribution(): Observable<CommonChart> {
+    return this.sandbox.getTopics().pipe(
+      map((topics) => {
+        const stateCounts = {
+          active: topics.filter((t) => t.topic_state === 'active').length,
+          unpublished: topics.filter((t) => t.topic_state === 'unpublished')
+            .length,
+          deleted: topics.filter((t) => t.topic_state === 'deleted').length,
+        };
+
+        const filtered = Object.entries(stateCounts)
+          .filter(([, count]) => count > 0)
+          .map(([label, count]) => ({
+            label: label.charAt(0).toUpperCase() + label.slice(1),
+            count,
+          }));
+
+        const labels = filtered.map((item) => item.label);
+        const data = filtered.map((item) => item.count);
+
+        return this.createChart({
+          title: 'Topic Status Distribution',
+          subtitle: 'Monitor the distribution of topic states.',
+          labels,
+          datasets: [
+            {
+              data,
+              label: 'Topics',
+              backgroundColor: [
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+              ],
+              borderColor: [
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(75, 192, 192, 1)',
+              ],
+              borderWidth: 1,
+            },
+          ],
+          type: 'pie',
+        });
+      })
+    );
+  }
+
+  getTopicsPerUser(): Observable<CommonChart> {
+    return combineLatest([
+      this.sandbox.getEnrollmentDetails(),
+      this.sandbox.getTopics(),
+    ]).pipe(
+      map(([users, topics]) => {
+        const userIdToName = new Map(
+          users.map((u) => [u.user_id.toString(), u.user.user_name])
+        );
+        const countTopicsByState = (state: 'active' | 'inactive') =>
+          topics
+            .filter((t) =>
+              state === 'active'
+                ? t.topic_state === 'active'
+                : t.topic_state !== 'active'
+            )
+            .reduce((acc: Record<string, number>, t) => {
+              const userId = t.topic_posted_by_user_id.toString();
+              acc[userId] = (acc[userId] || 0) + 1;
+              return acc;
+            }, {});
+
+        const activeData = countTopicsByState('active');
+        const inactiveData = countTopicsByState('inactive');
+        const mapUserIdToName = (id: string) => userIdToName.get(id) ?? '';
+
+        const { labels, counts: activeCounts } =
+          this.getTop5SortedLabelsAndCounts(activeData, mapUserIdToName);
+        const inactiveCounts = labels.map((label) => {
+          const userId = Object.keys(inactiveData).find(
+            (id) => mapUserIdToName(id) === label
+          );
+          return userId ? inactiveData[userId] || 0 : 0;
+        });
+
+        const datasets: ChartDataset[] = [
+          {
+            data: activeCounts,
+            label: 'Active Topics',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+          },
+          {
+            data: inactiveCounts,
+            label: 'Inactive Topics',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+          },
+        ];
+
+        return this.createChart({
+          title: 'User Posting Activity',
+          subtitle: 'Identify the top five users by posting frequency.',
+          labels,
+          datasets,
+        });
+      })
+    );
+  }
+
+  createEnrollmentChartStats(): Observable<CommonChart> {
+    return combineLatest([
+      this.sandbox.getCourses(),
+      this.sandbox.getEnrollments(),
+    ]).pipe(
+      map(([courses, enrollments]) => {
+        const data = courses.reduce((acc: Record<string, number>, course) => {
+          acc[course.course_id.toString()] = enrollments.filter(
+            (e) =>
+              e.course_id === course.course_id &&
+              e.enrollment_state === 'active' &&
+              e.enrollment_type === 'student'
+          ).length;
+          return acc;
+        }, {});
+
+        const { labels, counts } = this.getTop5SortedLabelsAndCounts(
+          data,
+          (courseId) =>
+            courses.find((c) => c.course_id.toString() === courseId)
+              ?.course_name ?? ''
+        );
+
+        const datasets: ChartDataset[] = [
+          {
+            data: counts,
+            label: 'Student Enrollments',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+          },
+        ];
+
+        return this.createChart({
+          title: 'Student Enrollments by Course',
+          subtitle:
+            'Displays the number of student enrollments for each course.',
+          labels,
+          datasets,
+        });
+      })
+    );
+  }
+
+  getTopicsByRole(): Observable<CommonChart> {
+    return combineLatest([
+      this.sandbox.getTopicDetails(),
+      this.sandbox.getEnrollmentDetails(),
+    ]).pipe(
+      map(([topics, users]) => {
+        const counts = topics.reduce(
+          (acc: { Student: number; Teacher: number }, topic) => {
+            const role = this.getRole(
+              topic.topic_posted_by_user_id.toString(),
+              users
+            );
+            if (role === 'student') acc.Student++;
+            else if (role === 'teacher') acc.Teacher++;
+            return acc;
+          },
+          { Student: 0, Teacher: 0 }
+        );
+
+        const labels = ['Students', 'Teachers'];
+        const data = [counts.Student, counts.Teacher];
+
+        return this.createChart({
+          title: 'Topics by Role',
+          subtitle: 'Compares topics created by students versus instructors.',
+          labels,
+          datasets: [
+            {
+              data,
+              label: 'Topics Created',
+              backgroundColor: [
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 99, 132, 0.2)',
+              ],
+              borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
+              borderWidth: 1,
+            },
+          ],
+          type: 'doughnut',
+        });
+      })
+    );
+  }
+
+  getEntriesByRole(): Observable<CommonChart> {
+    return combineLatest([
+      this.sandbox.getTopicDetails(),
+      this.sandbox.getEnrollmentDetails(),
+    ]).pipe(
+      map(([topics, users]) => {
+        const counts = topics
+          .flatMap((t) => t.entries)
+          .reduce(
+            (acc: { Student: number; Teacher: number }, entry) => {
+              const role = this.getRole(
+                entry.entry_posted_by_user_id.toString(),
+                users
+              );
+              if (role === 'student') acc.Student++;
+              else if (role === 'teacher') acc.Teacher++;
+              return acc;
+            },
+            { Student: 0, Teacher: 0 }
+          );
+
+        const labels = ['Students', 'Teachers'];
+        const data = [counts.Student, counts.Teacher];
+
+        return this.createChart({
+          title: 'Entries by Role',
+          subtitle: 'Analyzes entries posted by students versus instructors.',
+          labels,
+          datasets: [
+            {
+              data,
+              label: 'Entries Posted',
+              backgroundColor: [
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 99, 132, 0.2)',
+              ],
+              borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
+              borderWidth: 1,
+            },
+          ],
+          type: 'doughnut',
+        });
+      })
+    );
+  }
+
+  getEntriesOverTime(): Observable<CommonChart> {
+    return this.sandbox.getTopicDetails().pipe(
+      map((topics) => {
+        const entriesByMonth = topics
+          .flatMap((t) => t.entries)
+          .reduce((acc: Record<string, number>, entry) => {
+            const date = this.parseDate(entry.entry_created_at);
+            if (date) {
+              const monthYear = this.formatMonthYear(date);
+              acc[monthYear] = (acc[monthYear] || 0) + 1;
+            }
+            return acc;
+          }, {});
+
+        const sortedMonths = Object.keys(entriesByMonth).sort();
+        const labels = sortedMonths.map((month) => {
+          const [year, monthNum] = month.split('-').map(Number);
+          return this.formatDateLabel(new Date(year, monthNum - 1));
+        });
+        const data = sortedMonths.map((key) => entriesByMonth[key]);
+
+        return this.createChart({
+          title: 'Entry Creation Trends',
+          subtitle: 'Visualizes the number of entries created per month.',
+          labels,
+          datasets: [
+            {
+              data,
+              label: 'Entries Over Time',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1,
+              fill: false,
+              tension: 0.1,
+            },
+          ],
+          type: 'line',
+        });
+      })
+    );
+  }
+
+  createPerCourseEnrollmentTrendChart(): Observable<CommonChart> {
+    return this.sandbox.getEnrollmentDetails().pipe(
+      map((enrollments) => {
+        const enrollmentsByCourseAndMonth: Record<
+          number,
+          Record<string, number>
+        > = {};
+        enrollments.forEach((enrollment) => {
+          if (
+            enrollment.enrollment_state !== 'active' ||
+            enrollment.enrollment_type !== 'student'
+          )
+            return;
+          const date = this.parseDate(enrollment.user.user_created_at);
+          if (!date) return;
+
+          const monthKey = this.formatMonthYear(date);
+          const courseId = enrollment.course.course_id;
+          enrollmentsByCourseAndMonth[courseId] =
+            enrollmentsByCourseAndMonth[courseId] || {};
+          enrollmentsByCourseAndMonth[courseId][monthKey] =
+            (enrollmentsByCourseAndMonth[courseId][monthKey] || 0) + 1;
+        });
+
+        const allMonths = Array.from(
+          new Set(
+            Object.values(enrollmentsByCourseAndMonth).flatMap((courseMonths) =>
+              Object.keys(courseMonths)
+            )
+          )
+        ).sort();
+
+        const datasets: ChartDataset[] = Object.entries(
+          enrollmentsByCourseAndMonth
+        )
+          .map(([courseId, months]) => {
+            const course = enrollments.find(
+              (e) => e.course.course_id === parseInt(courseId)
+            )?.course;
+            if (!course) return null;
+            const data = allMonths.map((month) => months[month] || 0);
+            return {
+              data,
+              label: `${course.course_code}: ${course.course_name}`,
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1,
+              fill: false,
+              tension: 0.1,
+            } as ChartDataset;
+          })
+          .filter((d): d is ChartDataset => d !== null);
+
+        const labels = allMonths.map((month) => {
+          const [year, monthNum] = month.split('-').map(Number);
+          return this.formatDateLabel(new Date(year, monthNum - 1));
+        });
+
+        return this.createChart({
+          title: 'Per-Course Enrollment Trend',
+          subtitle: 'Displays monthly enrollment trends across courses.',
+          labels,
+          datasets,
+          type: 'line',
+          displayLabel: false,
+        });
+      })
+    );
+  }
+
+  getTopicPopularityChart(): Observable<CommonChart> {
+    return this.sandbox.getTopicDetails().pipe(
+      map((topics) => {
+        const topicData = topics.reduce(
+          (acc: Record<string, number>, topic) => {
+            acc[topic.topic_id.toString()] = topic.entries.length;
+            return acc;
+          },
+          {}
+        );
+
+        const { labels, counts } = this.getTop5SortedLabelsAndCounts(
+          topicData,
+          (id) =>
+            topics.find((t) => t.topic_id.toString() === id)?.topic_title ?? ''
+        );
+
+        const datasets: ChartDataset[] = [
+          {
+            data: counts,
+            label: 'Entries per Topic',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+          },
+        ];
+
+        return this.createChart({
+          title: 'Topic Popularity by Entry Count',
+          subtitle:
+            'Displays the number of entries for the top five most active topics.',
+          labels,
+          datasets,
+        });
+      })
+    );
   }
 }
