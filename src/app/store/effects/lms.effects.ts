@@ -34,9 +34,8 @@ export class LmsEffects {
   LoadData$ = createEffect(() =>
     this.actions$.pipe(
       ofType(LoadData),
-      withLatestFrom(this.store.select((state) => state.lms.currentUser)), // Access state
-      mergeMap(([action, currentUser]) =>
-        this.loadAllData(currentUser).pipe(
+      mergeMap(() =>
+        this.loadAllData().pipe(
           map((state) => LoadDataSuccess({ state })),
           catchError((error) => of(LoadDataFailure({ error: error.message })))
         )
@@ -58,12 +57,7 @@ export class LmsEffects {
     )
   );
 
-  private loadAllData(currentUser: LoginUser): Observable<AppState> {
-    const filterByCourseId = <T extends { course_id: number }>(
-      items: T[]
-    ): T[] =>
-      items.filter((item) => currentUser.course_id.includes(item.course_id));
-
+  private loadAllData(): Observable<AppState> {
     return combineLatest([
       this.loadCourses(),
       this.loadUsers(),

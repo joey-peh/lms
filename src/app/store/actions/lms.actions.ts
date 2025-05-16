@@ -16,7 +16,6 @@ const LMSActionGroup = createActionGroup({
   },
 });
 
-// Export individual action creators
 export const LoadData = LMSActionGroup.loadData;
 export const LoadDataSuccess = LMSActionGroup.loadDataSuccess;
 export const LoadDataFailure = LMSActionGroup.loadDataFailure;

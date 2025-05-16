@@ -7,32 +7,6 @@ import { ColumnDefinition } from '../models/lms-models';
 export class CommonService {
   constructor() {}
 
-  configureColumnConfig<T>(
-    data: T[],
-    columns: ColumnDefinition<T>[]
-  ): {
-    columnConfigs: {
-      columnDef: string;
-      displayName: string;
-      cell: (element: T) => any;
-      sortable: boolean;
-      filterable: boolean;
-    }[];
-    displayedColumns: string[];
-  } {
-    const columnConfigs = columns.map((col) => ({
-      columnDef: col.key,
-      displayName: col.displayName,
-      cell: col.selector,
-      sortable: col.sortable ?? true,
-      filterable: col.filterable ?? true,
-    }));
-
-    const displayedColumns = columns.map((col) => col.key);
-
-    return { columnConfigs, displayedColumns };
-  }
-
   configureBaseColumnConfig<T extends Record<string, any>>(
     data: T[],
     excludedKeys: string[] = [
@@ -94,7 +68,7 @@ export class CommonService {
     return { displayedColumns, columnConfigs };
   }
 
-  formatDisplayName(key: string): string {
+  private formatDisplayName(key: string): string {
     return key
       .replace(/topic_|user_/g, '')
       .split('_')
