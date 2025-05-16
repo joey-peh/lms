@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginUser } from '../../models/lms-models';
-import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
+import { LmsSandboxService } from '../../store/sandbox/lms-sandbox-service';
 
 @Component({
   selector: 'app-login',
@@ -11,7 +11,7 @@ import { CsvDataStoreService } from '../../service/csv-data-store-service.servic
 })
 export class LoginComponent {
   private router = inject(Router);
-  private csvDataStore = inject(CsvDataStoreService);
+  private sandbox = inject(LmsSandboxService);
 
   username = '';
   password = '';
@@ -40,7 +40,7 @@ export class LoginComponent {
     const user = this.users.find((u) => u.user_login_id === this.username);
     if (user && user.password === this.password) {
       // Store the user in the store instead of localStorage
-      this.csvDataStore.setCurrentUser(user);
+      this.sandbox.setCurrentUser(user);
       this.router.navigate(['/home']);
     } else {
       this.error = 'Invalid username or password';

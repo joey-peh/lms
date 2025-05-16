@@ -1,18 +1,18 @@
 import { inject, Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import { LoginUser as LoginUser } from './models/lms-models';
-import { CsvDataStoreService } from './service/csv-data-store-service.service';
 import { map, Observable } from 'rxjs';
+import { LmsSandboxService } from './store/sandbox/lms-sandbox-service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
   private router = inject(Router);
-  private csvDataStore = inject(CsvDataStoreService); // Inject the store service
+  private sandbox = inject(LmsSandboxService); // Inject the store service
 
   canActivate(): Observable<boolean> {
-    return this.csvDataStore.getCurrentUser().pipe(
+    return this.sandbox.getCurrentUser().pipe(
       map((user: LoginUser | null) => {
         if (user) {
           if (user.role === 'instructor' || user.role === 'admin') {

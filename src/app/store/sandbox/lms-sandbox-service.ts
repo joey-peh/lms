@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -13,7 +13,6 @@ import {
   EnrollmentDetails,
   UserDetails,
   TopicDetails,
-  LmsState,
 } from '../../models/lms-models';
 import {
   DeleteEnrollment,
@@ -27,14 +26,14 @@ import {
   providedIn: 'root',
 })
 export class LmsSandboxService {
-  constructor(private store: Store<{ lms: AppState }>) {}
+  private store = inject(Store<{ lms: AppState }>);
 
   // Filtering Methods
   private filterCourse(
     courses: Course[],
     currentUser: LoginUser | null
   ): Course[] {
-    if (!currentUser) return courses;
+    if (!currentUser) return [];
     if (currentUser.role === 'admin') return courses;
     return courses.filter((course) =>
       currentUser.course_id.includes(course.course_id)
@@ -45,11 +44,8 @@ export class LmsSandboxService {
     enrollments: EnrollmentDetails[],
     currentUser: LoginUser | null
   ): EnrollmentDetails[] {
-    if (!currentUser) return enrollments;
-    if (currentUser.role === 'admin')
-      return enrollments.filter(
-        (enrollment) => enrollment.enrollment_state === 'active'
-      );
+    if (!currentUser) return [];
+    if (currentUser.role === 'admin') return enrollments;
     return enrollments.filter(
       (enrollment) =>
         enrollment.enrollment_state === 'active' &&
@@ -61,14 +57,36 @@ export class LmsSandboxService {
     topics: TopicDetails[],
     currentUser: LoginUser | null
   ): TopicDetails[] {
-    if (!currentUser) return topics;
-    if (currentUser.role === 'admin')
-      return topics.filter((topic) => topic.topic_state === 'active');
-    return topics.filter(
-      (topic) =>
-        topic.topic_state === 'active' &&
-        currentUser.course_id.includes(topic.course_id)
-    );
+    if (!currentUser) return [];
+
+    if (currentUser.role !== 'admin') {
+      topics = topics.filter(
+        (topic) =>
+          topic.topic_state === 'active' &&
+          currentUser.course_id.includes(topic.course_id)
+      );
+    }
+
+    topics = topics.sort((a, b) => {
+      const isAUserEntry =
+        a.topic_posted_by_user_id.toString() === currentUser.user_id;
+      const isBUserEntry =
+        b.topic_posted_by_user_id.toString() === currentUser.user_id;
+
+      if (isAUserEntry && !isBUserEntry) return -1;
+      if (!isAUserEntry && isBUserEntry) return 1;
+
+      const aEntries = a.entries.length;
+      const bEntries = b.entries.length;
+
+      if (aEntries !== bEntries) {
+        return bEntries - aEntries; // Sort by number of entries descending
+      }
+
+      return b.topic_created_at.localeCompare(a.topic_created_at);
+    });
+
+    return topics;
   }
 
   // State Selectors
@@ -85,22 +103,6 @@ export class LmsSandboxService {
     );
   }
 
-  getUsers(): Observable<User[]> {
-    return this.getState().pipe(map((state) => state.users));
-  }
-
-  getEnrollments(): Observable<Enrollment[]> {
-    return this.getState().pipe(map((state) => state.enrollments));
-  }
-
-  getTopics(): Observable<Topic[]> {
-    return this.getState().pipe(map((state) => state.topics));
-  }
-
-  getEntries(): Observable<Entries[]> {
-    return this.getState().pipe(map((state) => state.entries));
-  }
-
   getLoading(): Observable<boolean> {
     return this.getState().pipe(map((state) => state.loading));
   }
@@ -111,6 +113,10 @@ export class LmsSandboxService {
 
   getCurrentUser(): Observable<LoginUser | null> {
     return this.getState().pipe(map((state) => state.currentUser));
+  }
+
+  isDataLoaded(): Observable<boolean> {
+    return this.getState().pipe(map((state) => state.isDataLoaded));
   }
 
   getEnrollmentDetails(): Observable<EnrollmentDetails[]> {

@@ -160,16 +160,14 @@ export interface MenuItem {
 // ────────────────────────────────────────────────────────────────────────────────
 //
 
-export interface LmsState {
+export interface AppState {
+  loading: boolean;
+  error: string | null;
+  currentUser: LoginUser | null;
   courses: Course[];
   users: User[];
   enrollments: Enrollment[];
   topics: Topic[];
   entries: Entries[];
-}
-
-export interface AppState extends LmsState {
-  loading: boolean;
-  error: string | null;
-  currentUser: LoginUser | null;
+  isDataLoaded: boolean;
 }

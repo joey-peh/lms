@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { map, shareReplay, take, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { BaseUserComponent } from '../base/base-user.component';
 import { MenuItem } from '../../models/lms-models';
@@ -41,8 +41,19 @@ export class NavComponent extends BaseUserComponent implements OnInit {
     );
 
   override ngOnInit(): void {
-    super.ngOnInit(); // Call the base class's ngOnInit to set up the user subscription
-    this.filterMenuItems(); // Filter menu items after user is set
+    super.ngOnInit();
+    this.filterMenuItems();
+    this.sandbox
+      .isDataLoaded()
+      .pipe(
+        take(1),
+        tap((isLoaded) => {
+          if (!isLoaded) {
+            this.sandbox.loadData();
+          }
+        })
+      )
+      .subscribe();
   }
 
   private filterMenuItems(): void {
@@ -52,7 +63,7 @@ export class NavComponent extends BaseUserComponent implements OnInit {
   }
 
   signOut(): void {
-    this.csvDataStore.setCurrentUser(null);
+    this.sandbox.setCurrentUser(null);
     this.router.navigate(['/login']);
   }
 }

@@ -1,15 +1,6 @@
-import {
-  AfterViewInit,
-  ChangeDetectorRef,
-  Component,
-  inject,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort, Sort } from '@angular/material/sort'; // Import MatSort
-import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
+import { Sort } from '@angular/material/sort'; // Import MatSort
 import { Observable } from 'rxjs';
 import {
   EntryDetails,
@@ -27,11 +18,7 @@ import { ConfirmDialogComponent } from '../base/confirm-dialog/confirm-dialog.co
   templateUrl: './discussions.component.html',
   styleUrl: './discussions.component.css',
 })
-export class DiscussionsComponent
-  extends BaseUserComponent
-  implements OnInit, AfterViewInit
-{
-  private store = inject(CsvDataStoreService);
+export class DiscussionsComponent extends BaseUserComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private commonService = inject(CommonService);
 
@@ -66,10 +53,9 @@ export class DiscussionsComponent
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.topicDetails$ = this.store.getTopicDetails();
+    this.topicDetails$ = this.sandbox.getTopicDetails();
 
     this.topicDetails$.subscribe((topics) => {
-      topics = this.filterTopicDetails(topics);
       this.configureDiscussionTable(topics);
       this.cdr.markForCheck();
     });
@@ -93,37 +79,6 @@ export class DiscussionsComponent
           .includes(value.toLowerCase());
       });
     };
-  }
-
-  ngAfterViewInit(): void {
-    // // Custom sorting accessor for topics
-    // this.topicList.dataSource.sortingDataAccessor = (
-    //   data: TableRow,
-    //   property: string
-    // ) => {
-    //   const config = this.topicList.columnConfigs.find(
-    //     (col) => col.columnDef === property
-    //   );
-    //   if (config) {
-    //     const value = config.cell(data);
-    //     return typeof value === 'string' ? value.toLowerCase() : value;
-    //   }
-    //   return '';
-    // };
-    // // Custom sorting accessor for entries
-    // this.entry.dataSource.sortingDataAccessor = (
-    //   data: TableRow,
-    //   property: string
-    // ) => {
-    //   const config = this.entry.columnConfigs.find(
-    //     (col) => col.columnDef === property
-    //   );
-    //   if (config) {
-    //     const value = config.cell(data);
-    //     return typeof value === 'string' ? value.toLowerCase() : value;
-    //   }
-    //   return '';
-    // };
   }
 
   selectTopic = (row: TopicDetails) => {
@@ -217,20 +172,18 @@ export class DiscussionsComponent
 
     dialogRef.afterClosed().subscribe((result: any) => {
       if (result) {
-        this.store.deleteTopics(element).subscribe(() => {
-          this.topicDetails$ = this.store.getTopicDetails();
-          this.topicDetails$.subscribe((topics) => {
-            topics = this.filterTopicDetails(topics);
-            this.topicList.dataSource.data = topics;
-            this.entry = {
-              dataSource: new MatTableDataSource<TableRow>([]),
-              columnConfigs: [],
-              displayedColumns: [],
-              title: '',
-              subtitle: '',
-            };
-            this.cdr.markForCheck();
-          });
+        this.sandbox.deleteTopic(element);
+        this.topicDetails$ = this.sandbox.getTopicDetails();
+        this.topicDetails$.subscribe((topics) => {
+          this.topicList.dataSource.data = topics;
+          this.entry = {
+            dataSource: new MatTableDataSource<TableRow>([]),
+            columnConfigs: [],
+            displayedColumns: [],
+            title: '',
+            subtitle: '',
+          };
+          this.cdr.markForCheck();
         });
       }
     });

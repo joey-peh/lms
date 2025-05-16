@@ -24,7 +24,6 @@ import { LmsSandboxService } from '../../store/sandbox/lms-sandbox-service';
 })
 export class DashboardComponent extends BaseUserComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
-  private sandbox = inject(LmsSandboxService);
   private cdr = inject(ChangeDetectorRef);
   private chartService = inject(ChartService);
 
@@ -54,9 +53,9 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       this.sandbox.getEnrollmentDetails(),
       this.sandbox.getTopicDetails(),
     ]).pipe(
-      map(([courses, users, topics]) =>
-        this.createMiniCardData(courses, users, topics)
-      )
+      map(([courses, users, topics]) => {
+        return this.createMiniCardData(courses, users, topics);
+      })
     );
 
     this.topicData$ = combineLatest([
@@ -94,7 +93,6 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.sandbox.loadData();
   }
 
   private buildParticipationTable(
@@ -207,9 +205,11 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
         link: () => this.toggleChart('entries'),
       },
       {
-        title:
-          this.user.role === 'admin' ? 'Active Enrollments' : 'Active Students',
-        value: enrollments.length,
+        title: this.user.role === 'admin' ? 'Enrollments' : 'Students',
+        value:
+          this.user.role === 'admin'
+            ? enrollments.length
+            : enrollments.filter((e) => e.enrollment_type === 'student').length,
         icon: 'group',
         link: () => this.toggleChart('students'),
       },

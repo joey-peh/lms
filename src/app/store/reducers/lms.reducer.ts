@@ -1,6 +1,14 @@
 import { createReducer, on } from '@ngrx/store';
 import { AppState, Enrollment, Topic } from '../../models/lms-models';
-import { LoadData, LoadDataSuccess, LoadDataFailure, DeleteEnrollmentSuccess, DeleteTopicSuccess, SetCurrentUser, ResetState } from '../actions/lms.actions';
+import {
+  LoadData,
+  LoadDataSuccess,
+  LoadDataFailure,
+  DeleteEnrollmentSuccess,
+  DeleteTopicSuccess,
+  SetCurrentUser,
+  ResetState,
+} from '../actions/lms.actions';
 export const initialState: AppState = {
   courses: [],
   users: [],
@@ -10,17 +18,26 @@ export const initialState: AppState = {
   loading: false,
   error: null,
   currentUser: null,
+  isDataLoaded: false,
 };
 
 export const lmsReducer = createReducer(
   initialState,
   on(LoadData, (state) => ({ ...state, loading: true, error: null })),
-  on(LoadDataSuccess, (state, { state: newState }) => ({
-    ...state,
-    ...newState,
-    loading: false,
-    error: null,
-  })),
+  on(LoadDataSuccess, (state, { state: newState }) => {
+    return {
+      ...state,
+      courses: newState.courses,
+      enrollments: newState.enrollments,
+      topics: newState.topics,
+      entries: newState.entries,
+      users: newState.users,
+      currentUser: state.currentUser,
+      isDataLoaded: newState.isDataLoaded,
+      loading: false,
+      error: null,
+    };
+  }),
   on(LoadDataFailure, (state, { error }) => ({
     ...state,
     loading: false,

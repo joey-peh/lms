@@ -334,7 +334,7 @@ export class ChartService {
   getTopicsPerCourse(): Observable<CommonChart> {
     return combineLatest([
       this.sandbox.getCourses(),
-      this.sandbox.getTopics(),
+      this.sandbox.getTopicDetails(),
     ]).pipe(
       map(([courses, topics]) => {
         const countTopicsByState = (state: 'active' | 'inactive') =>
@@ -392,7 +392,7 @@ export class ChartService {
   }
 
   getTopicsOverTime(): Observable<CommonChart> {
-    return this.sandbox.getTopics().pipe(
+    return this.sandbox.getTopicDetails().pipe(
       map((topics) => {
         const countsByMonth = topics.reduce(
           (
@@ -459,7 +459,7 @@ export class ChartService {
   }
 
   getTopicStatesDistribution(): Observable<CommonChart> {
-    return this.sandbox.getTopics().pipe(
+    return this.sandbox.getTopicDetails().pipe(
       map((topics) => {
         const stateCounts = {
           active: topics.filter((t) => t.topic_state === 'active').length,
@@ -508,7 +508,7 @@ export class ChartService {
   getTopicsPerUser(): Observable<CommonChart> {
     return combineLatest([
       this.sandbox.getEnrollmentDetails(),
-      this.sandbox.getTopics(),
+      this.sandbox.getTopicDetails(),
     ]).pipe(
       map(([users, topics]) => {
         const userIdToName = new Map(
@@ -570,7 +570,7 @@ export class ChartService {
   createEnrollmentChartStats(): Observable<CommonChart> {
     return combineLatest([
       this.sandbox.getCourses(),
-      this.sandbox.getEnrollments(),
+      this.sandbox.getEnrollmentDetails(),
     ]).pipe(
       map(([courses, enrollments]) => {
         const data = courses.reduce((acc: Record<string, number>, course) => {

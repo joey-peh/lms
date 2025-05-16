@@ -1,6 +1,5 @@
 import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import { MatPaginator } from '@angular/material/paginator';
 import {
   EnrollmentDetails,
@@ -19,7 +18,6 @@ import { ConfirmDialogComponent } from '../base/confirm-dialog/confirm-dialog.co
   styleUrl: './user.component.css',
 })
 export class UserComponent extends BaseUserComponent implements OnInit {
-  private store = inject(CsvDataStoreService);
   private commonService = inject(CommonService);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -39,12 +37,11 @@ export class UserComponent extends BaseUserComponent implements OnInit {
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.enrollmentData$ = this.store.getEnrollmentDetails();
+    this.enrollmentData$ = this.sandbox.getEnrollmentDetails();
     this.enrollmentData$.subscribe((enrollment) => {
-      const studentEnrollment = this.filterEnrolmentList(enrollment, true);
       var { columnConfigs, displayedColumns } =
         this.commonService.configureBaseColumnConfig(
-          studentEnrollment,
+          enrollment,
           ['user', 'course'],
           [
             {
@@ -57,6 +54,11 @@ export class UserComponent extends BaseUserComponent implements OnInit {
               displayName: 'Course',
               selector: (enrollment) => enrollment.course.course_name,
             },
+            {
+              key: 'user.user_created_at',
+              displayName: 'Date Joined',
+              selector: (enrollment) => enrollment.user.user_created_at,
+          },
           ]
         );
 
@@ -72,12 +74,14 @@ export class UserComponent extends BaseUserComponent implements OnInit {
       }
 
       this.userData.title =
-        this.user.role == 'admin' ? 'Active Enrollments' : 'Active Students';
+        this.user.role == 'admin' ? 'Enrollments' : 'Students';
       this.userData.subtitle =
         this.user.role == 'admin'
           ? 'Get list of all enrollments'
-          : 'Get list of active student enrollments under instructor';
-      this.userData.dataSource.data = studentEnrollment;
+          : 'Get list of student enrollments under instructor';
+
+      enrollment = enrollment.filter(x => x.enrollment_type === 'student');
+      this.userData.dataSource.data = enrollment;
       this.userData.columnConfigs = columnConfigs;
       this.userData.displayedColumns = displayedColumns;
     });
@@ -92,15 +96,10 @@ export class UserComponent extends BaseUserComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: any) => {
       if (result) {
-        this.store.deleteEnrollment(enrollment).subscribe(() => {
-          this.enrollmentData$ = this.store.getEnrollmentDetails();
-          this.enrollmentData$.subscribe((enrollments) => {
-            const studentEnrollment = this.filterEnrolmentList(
-              enrollments,
-              true
-            );
-            this.userData.dataSource.data = studentEnrollment;
-          });
+        this.sandbox.deleteEnrollment(enrollment);
+        this.enrollmentData$ = this.sandbox.getEnrollmentDetails();
+        this.enrollmentData$.subscribe((enrollments) => {
+          this.userData.dataSource.data = enrollments;
         });
       }
     });

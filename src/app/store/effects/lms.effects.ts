@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { HttpClient } from '@angular/common/http';
 import { combineLatest, Observable, of } from 'rxjs';
-import { catchError, map, mergeMap } from 'rxjs/operators';
+import { catchError, map, mergeMap, withLatestFrom } from 'rxjs/operators';
 import { DatePipe } from '@angular/common';
 import {
   Course,
@@ -11,6 +11,7 @@ import {
   Topic,
   Entries,
   AppState,
+  LoginUser,
 } from '../../models/lms-models';
 import {
   DeleteEnrollment,
@@ -21,9 +22,11 @@ import {
   LoadDataFailure,
   LoadDataSuccess,
 } from '../actions/lms.actions';
+import { Store } from '@ngrx/store';
 
 @Injectable()
 export class LmsEffects {
+  private store = inject(Store<{ lms: AppState }>);
   private actions$ = inject(Actions);
   private http = inject(HttpClient);
   private datePipe = inject(DatePipe);
@@ -31,8 +34,9 @@ export class LmsEffects {
   LoadData$ = createEffect(() =>
     this.actions$.pipe(
       ofType(LoadData),
-      mergeMap(() =>
-        this.loadAllData().pipe(
+      withLatestFrom(this.store.select((state) => state.lms.currentUser)), // Access state
+      mergeMap(([action, currentUser]) =>
+        this.loadAllData(currentUser).pipe(
           map((state) => LoadDataSuccess({ state })),
           catchError((error) => of(LoadDataFailure({ error: error.message })))
         )
@@ -54,7 +58,12 @@ export class LmsEffects {
     )
   );
 
-  private loadAllData(): Observable<AppState> {
+  private loadAllData(currentUser: LoginUser): Observable<AppState> {
+    const filterByCourseId = <T extends { course_id: number }>(
+      items: T[]
+    ): T[] =>
+      items.filter((item) => currentUser.course_id.includes(item.course_id));
+
     return combineLatest([
       this.loadCourses(),
       this.loadUsers(),
@@ -64,14 +73,15 @@ export class LmsEffects {
     ]).pipe(
       map(([courses, users, enrollments, topics, entries]) => {
         return {
-          courses,
-          users,
-          enrollments,
-          topics,
-          entries,
+          courses: courses,
+          users: users,
+          enrollments: enrollments,
+          topics: topics,
+          entries: entries,
           loading: false,
           error: null,
-          currentUser: null, // Or derive from auth service
+          currentUser: null,
+          isDataLoaded: true,
         };
       })
     );
