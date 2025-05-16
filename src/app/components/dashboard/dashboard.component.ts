@@ -1,8 +1,7 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Observable, combineLatest } from 'rxjs';
+import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { CsvDataStoreService } from '../../service/csv-data-store-service.service';
 import {
   CommonChart,
   Course,
@@ -25,15 +24,11 @@ import { LmsSandboxService } from '../../store/sandbox/lms-sandbox-service';
 })
 export class DashboardComponent extends BaseUserComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
-  private store = inject(CsvDataStoreService);
+  private sandbox = inject(LmsSandboxService);
   private cdr = inject(ChangeDetectorRef);
   private chartService = inject(ChartService);
 
-  //start refactoring
-  private sandbox = inject(LmsSandboxService);
-  //end refactoring
-
-  courses$ = this.store.getCourses();
+  courses$ = this.sandbox.getCourses();
 
   miniCardData$: Observable<MiniCard[]>;
   topicData$: Observable<CommonChart[]>;
@@ -56,89 +51,50 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     super();
     this.miniCardData$ = combineLatest([
       this.courses$,
-      this.store.getEnrollmentDetails(),
-      this.store.getTopicDetails(),
+      this.sandbox.getEnrollmentDetails(),
+      this.sandbox.getTopicDetails(),
     ]).pipe(
-      map(([courses, users, topics]) => {
-        courses = this.filterCourse(courses);
-        users = this.filterEnrolment(users);
-        topics = this.filterTopicDetails(topics);
-        return this.createMiniCardData(courses, users, topics);
-      })
+      map(([courses, users, topics]) =>
+        this.createMiniCardData(courses, users, topics)
+      )
     );
 
     this.topicData$ = combineLatest([
-      this.courses$,
-      this.store.getEnrollmentDetails(),
-      this.store.getTopicDetails(),
-    ]).pipe(
-      map(([courses, users, topicDetails]) => {
-        courses = this.filterCourse(courses);
-        users = this.filterEnrolment(users);
-        topicDetails = this.filterTopicDetails(topicDetails);
-        var commonChartList: CommonChart[] = [
-          this.chartService.getTopicPopularityChart(topicDetails),
-          this.chartService.getTopicsByRole(topicDetails, users),
-          this.chartService.getTopicsPerCourse(courses, topicDetails),
-          this.chartService.getTopicsPerUser(users, topicDetails),
-          this.chartService.getTopicsOverTime(topicDetails),
-          this.chartService.getTopicStatesDistribution(topicDetails),
-        ];
-        return commonChartList;
-      })
-    );
+      this.chartService.getTopicPopularityChart(),
+      this.chartService.getTopicsByRole(),
+      this.chartService.getTopicsPerCourse(),
+      this.chartService.getTopicsPerUser(),
+      this.chartService.getTopicsOverTime(),
+      this.chartService.getTopicStatesDistribution(),
+    ]).pipe(map((chartObservables) => chartObservables as CommonChart[]));
 
     this.entryData$ = combineLatest([
-      this.courses$,
-      this.store.getEnrollmentDetails(),
-      this.store.getTopicDetails(),
+      this.chartService.getEntriesByRole(),
+      this.chartService.getEntriesByStudent(),
+      this.chartService.getEngagementByCourse(),
+      this.chartService.getDiscussionActivityOverTime(),
+      this.chartService.getEntriesOverTime(),
       this.chartService.getEntriesPerCourse(),
-    ]).pipe(
-      map(([courses, users, topicDetails, getEntriesPerCourse]) => {
-        courses = this.filterCourse(courses);
-        users = this.filterEnrolment(users);
-        topicDetails = this.filterTopicDetails(topicDetails);
-        var commonChartList: CommonChart[] = [
-          this.chartService.getEntriesByRole(topicDetails, users),
-          this.chartService.getEntriesByStudent(topicDetails, users),
-          this.chartService.getEngagementByCourse(topicDetails, courses, users),
-          this.chartService.getDiscussionActivityOverTime(topicDetails),
-          this.chartService.getEntriesOverTime(topicDetails),
-          getEntriesPerCourse,
-        ];
-        return commonChartList;
-      })
-    );
+    ]).pipe(map((chartObservables) => chartObservables as CommonChart[]));
 
     this.enrollmentData$ = combineLatest([
-      this.courses$,
-      this.store.getEnrollmentDetails(),
-    ]).pipe(
-      map(([courses, enrollments]) => {
-        courses = this.filterCourse(courses);
-        enrollments = this.filterEnrolment(enrollments);
-        return [
-          this.chartService.createEnrollmentChartStats(courses, enrollments),
-          this.chartService.createPerCourseEnrollmentTrendChart(enrollments),
-        ];
-      })
-    );
+      this.chartService.createEnrollmentChartStats(),
+      this.chartService.createPerCourseEnrollmentTrendChart(),
+    ]).pipe(map((chartObservables) => chartObservables as CommonChart[]));
 
     this.tableData$ = combineLatest([
-      this.store.getTopicDetails(),
-      this.store.getEnrollmentDetails(),
+      this.sandbox.getTopicDetails(),
+      this.sandbox.getEnrollmentDetails(),
     ]).pipe(
-      map(([topics, enrollments]) => {
-        topics = this.filterTopicDetails(topics);
-        enrollments = this.filterEnrolment(enrollments);
-        return [this.buildParticipationTable(topics, enrollments)];
-      })
+      map(([topics, enrollments]) => [
+        this.buildParticipationTable(topics, enrollments),
+      ])
     );
   }
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this.store.loadData();
+    this.sandbox.loadData();
   }
 
   private buildParticipationTable(
@@ -148,7 +104,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
     const participationTable = this.getParticipationTable(topics, enrollments);
 
     const columns = ['name', ...participationTable.headers.slice(1)];
-    var columnConfigs = columns.map((col) => ({
+    const columnConfigs = columns.map((col) => ({
       columnDef: col,
       displayName: col === 'name' ? 'Student Name' : col,
       cell: (row: TableRow) => `${row[col] ?? ''}`,
@@ -166,7 +122,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
 
     return {
       dataSource: new MatTableDataSource(tableRows),
-      columnConfigs: columnConfigs,
+      columnConfigs,
       displayedColumns: columns,
       title: 'Student Participation',
       subtitle:
@@ -183,7 +139,6 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       [groupName: string]: { [userId: string]: number };
     } = {};
 
-    // Build engagement data
     for (const topic of topicsWithDetails) {
       const groupName =
         groupBy === 'course' ? topic.course.course_name : topic.topic_title;
@@ -201,16 +156,13 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       }
     }
 
-    // Sort group names
     const sortedGroupNames = Object.keys(engagementByGroup).sort();
 
-    // Map users by ID
     const usersById: Record<string, string> = {};
     users.forEach((user) => {
       usersById[user.user_id.toString()] = user.user.user_name;
     });
 
-    // Use all user IDs from the users array, not just those with entries
     const allUserIds = users.map((user) => user.user_id.toString());
 
     const rows = allUserIds
@@ -257,7 +209,7 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
       {
         title:
           this.user.role === 'admin' ? 'Active Enrollments' : 'Active Students',
-        value: this.filterEnrolmentList(enrollments, false).length,
+        value: enrollments.length,
         icon: 'group',
         link: () => this.toggleChart('students'),
       },

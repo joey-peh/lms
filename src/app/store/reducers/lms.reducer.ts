@@ -1,15 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { AppState, Enrollment, Topic } from '../../models/lms-models';
-import {
-  loadData,
-  loadDataSuccess,
-  loadDataFailure,
-  deleteEnrollmentSuccess,
-  deleteTopicSuccess,
-  setCurrentUser,
-  resetState,
-} from '../actions/lms.actions';
-
+import { LoadData, LoadDataSuccess, LoadDataFailure, DeleteEnrollmentSuccess, DeleteTopicSuccess, SetCurrentUser, ResetState } from '../actions/lms.actions';
 export const initialState: AppState = {
   courses: [],
   users: [],
@@ -23,19 +14,19 @@ export const initialState: AppState = {
 
 export const lmsReducer = createReducer(
   initialState,
-  on(loadData, (state) => ({ ...state, loading: true, error: null })),
-  on(loadDataSuccess, (state, { state: newState }) => ({
+  on(LoadData, (state) => ({ ...state, loading: true, error: null })),
+  on(LoadDataSuccess, (state, { state: newState }) => ({
     ...state,
     ...newState,
     loading: false,
     error: null,
   })),
-  on(loadDataFailure, (state, { error }) => ({
+  on(LoadDataFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error,
   })),
-  on(deleteEnrollmentSuccess, (state, { enrollment }) => ({
+  on(DeleteEnrollmentSuccess, (state, { enrollment }) => ({
     ...state,
     enrollments: state.enrollments.map((e) =>
       e.user_id === enrollment.user_id && e.course_id === enrollment.course_id
@@ -43,7 +34,7 @@ export const lmsReducer = createReducer(
         : e
     ),
   })),
-  on(deleteTopicSuccess, (state, { topic }) => ({
+  on(DeleteTopicSuccess, (state, { topic }) => ({
     ...state,
     topics: state.topics.map((t) =>
       t.topic_id === topic.topic_id
@@ -51,9 +42,9 @@ export const lmsReducer = createReducer(
         : t
     ),
   })),
-  on(setCurrentUser, (state, { user }) => ({
+  on(SetCurrentUser, (state, { user }) => ({
     ...state,
     currentUser: user,
   })),
-  on(resetState, () => initialState)
+  on(ResetState, () => initialState)
 );

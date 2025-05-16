@@ -1,42 +1,28 @@
-import { createAction, props } from '@ngrx/store';
+import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { EnrollmentDetails, TopicDetails, LoginUser, LmsState } from '../../models/lms-models';
 
-// Load Data Actions
-export const loadData = createAction('[LMS] Load Data');
-export const loadDataSuccess = createAction(
-  '[LMS] Load Data Success',
-  props<{ state: LmsState }>()
-);
-export const loadDataFailure = createAction(
-  '[LMS] Load Data Failure',
-  props<{ error: string }>()
-);
+const LMSActionGroup = createActionGroup({
+  source: 'LMS',
+  events: {
+    'Load Data': emptyProps(),
+    'Load Data Success': props<{ state: LmsState }>(),
+    'Load Data Failure': props<{ error: string }>(),
+    'Delete Enrollment': props<{ enrollment: EnrollmentDetails }>(),
+    'Delete Enrollment Success': props<{ enrollment: EnrollmentDetails }>(),
+    'Delete Topic': props<{ topic: TopicDetails }>(),
+    'Delete Topic Success': props<{ topic: TopicDetails }>(),
+    'Set Current User': props<{ user: LoginUser | null }>(),
+    'Reset State': emptyProps(),
+  },
+});
 
-// Delete Enrollment Actions
-export const deleteEnrollment = createAction(
-  '[LMS] Delete Enrollment',
-  props<{ enrollment: EnrollmentDetails }>()
-);
-export const deleteEnrollmentSuccess = createAction(
-  '[LMS] Delete Enrollment Success',
-  props<{ enrollment: EnrollmentDetails }>()
-);
-
-// Delete Topic Actions
-export const deleteTopic = createAction(
-  '[LMS] Delete Topic',
-  props<{ topic: TopicDetails }>()
-);
-export const deleteTopicSuccess = createAction(
-  '[LMS] Delete Topic Success',
-  props<{ topic: TopicDetails }>()
-);
-
-// Set Current User Actions
-export const setCurrentUser = createAction(
-  '[LMS] Set Current User',
-  props<{ user: LoginUser | null }>()
-);
-
-// Reset State Action
-export const resetState = createAction('[LMS] Reset State');
+// Export individual action creators
+export const LoadData = LMSActionGroup.loadData;
+export const LoadDataSuccess = LMSActionGroup.loadDataSuccess;
+export const LoadDataFailure = LMSActionGroup.loadDataFailure;
+export const DeleteEnrollment = LMSActionGroup.deleteEnrollment;
+export const DeleteEnrollmentSuccess = LMSActionGroup.deleteEnrollmentSuccess;
+export const DeleteTopic = LMSActionGroup.deleteTopic;
+export const DeleteTopicSuccess = LMSActionGroup.deleteTopicSuccess;
+export const SetCurrentUser = LMSActionGroup.setCurrentUser;
+export const ResetState = LMSActionGroup.resetState;

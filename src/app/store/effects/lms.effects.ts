@@ -5,15 +5,6 @@ import { combineLatest, Observable, of } from 'rxjs';
 import { catchError, map, mergeMap } from 'rxjs/operators';
 import { DatePipe } from '@angular/common';
 import {
-  loadData,
-  loadDataSuccess,
-  loadDataFailure,
-  deleteEnrollment,
-  deleteEnrollmentSuccess,
-  deleteTopic,
-  deleteTopicSuccess,
-} from '../actions/lms.actions';
-import {
   Course,
   User,
   EnrollmentDetails,
@@ -21,6 +12,15 @@ import {
   Entries,
   AppState,
 } from '../../models/lms-models';
+import {
+  DeleteEnrollment,
+  DeleteEnrollmentSuccess,
+  DeleteTopic,
+  DeleteTopicSuccess,
+  LoadData,
+  LoadDataFailure,
+  LoadDataSuccess,
+} from '../actions/lms.actions';
 
 @Injectable()
 export class LmsEffects {
@@ -28,13 +28,13 @@ export class LmsEffects {
   private http = inject(HttpClient);
   private datePipe = inject(DatePipe);
 
-  loadData$ = createEffect(() =>
+  LoadData$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(loadData),
+      ofType(LoadData),
       mergeMap(() =>
         this.loadAllData().pipe(
-          map((state) => loadDataSuccess({ state })),
-          catchError((error) => of(loadDataFailure({ error: error.message })))
+          map((state) => LoadDataSuccess({ state })),
+          catchError((error) => of(LoadDataFailure({ error: error.message })))
         )
       )
     )
@@ -42,15 +42,15 @@ export class LmsEffects {
 
   deleteEnrollment$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(deleteEnrollment),
-      map(({ enrollment }) => deleteEnrollmentSuccess({ enrollment }))
+      ofType(DeleteEnrollment),
+      map(({ enrollment }) => DeleteEnrollmentSuccess({ enrollment }))
     )
   );
 
   deleteTopic$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(deleteTopic),
-      map(({ topic }) => deleteTopicSuccess({ topic }))
+      ofType(DeleteTopic),
+      map(({ topic }) => DeleteTopicSuccess({ topic }))
     )
   );
 

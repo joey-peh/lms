@@ -1,14 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import {
-  loadData,
-  deleteEnrollment,
-  deleteTopic,
-  setCurrentUser,
-  resetState,
-} from '../actions/lms.actions';
 import {
   AppState,
   Course,
@@ -22,6 +15,13 @@ import {
   TopicDetails,
   LmsState,
 } from '../../models/lms-models';
+import {
+  DeleteEnrollment,
+  DeleteTopic,
+  LoadData,
+  ResetState,
+  SetCurrentUser,
+} from '../actions/lms.actions';
 
 @Injectable({
   providedIn: 'root',
@@ -29,13 +29,60 @@ import {
 export class LmsSandboxService {
   constructor(private store: Store<{ lms: AppState }>) {}
 
+  // Filtering Methods
+  private filterCourse(
+    courses: Course[],
+    currentUser: LoginUser | null
+  ): Course[] {
+    if (!currentUser) return courses;
+    if (currentUser.role === 'admin') return courses;
+    return courses.filter((course) =>
+      currentUser.course_id.includes(course.course_id)
+    );
+  }
+
+  private filterEnrolment(
+    enrollments: EnrollmentDetails[],
+    currentUser: LoginUser | null
+  ): EnrollmentDetails[] {
+    if (!currentUser) return enrollments;
+    if (currentUser.role === 'admin')
+      return enrollments.filter(
+        (enrollment) => enrollment.enrollment_state === 'active'
+      );
+    return enrollments.filter(
+      (enrollment) =>
+        enrollment.enrollment_state === 'active' &&
+        currentUser.course_id.includes(enrollment.course_id)
+    );
+  }
+
+  private filterTopicDetails(
+    topics: TopicDetails[],
+    currentUser: LoginUser | null
+  ): TopicDetails[] {
+    if (!currentUser) return topics;
+    if (currentUser.role === 'admin')
+      return topics.filter((topic) => topic.topic_state === 'active');
+    return topics.filter(
+      (topic) =>
+        topic.topic_state === 'active' &&
+        currentUser.course_id.includes(topic.course_id)
+    );
+  }
+
   // State Selectors
   getState(): Observable<AppState> {
     return this.store.select((state) => state.lms);
   }
 
   getCourses(): Observable<Course[]> {
-    return this.getState().pipe(map((state) => state.courses));
+    return combineLatest([
+      this.getState().pipe(map((state) => state.courses)),
+      this.getCurrentUser(),
+    ]).pipe(
+      map(([courses, currentUser]) => this.filterCourse(courses, currentUser))
+    );
   }
 
   getUsers(): Observable<User[]> {
@@ -67,9 +114,9 @@ export class LmsSandboxService {
   }
 
   getEnrollmentDetails(): Observable<EnrollmentDetails[]> {
-    return this.getState().pipe(
-      map((state) =>
-        state.enrollments.map(
+    return combineLatest([this.getState(), this.getCurrentUser()]).pipe(
+      map(([state, currentUser]) => {
+        const enrollments = state.enrollments.map(
           (enrollment: { course_id: any; user_id: any }) =>
             ({
               ...enrollment,
@@ -80,8 +127,9 @@ export class LmsSandboxService {
                 (u: { user_id: any }) => u.user_id === enrollment.user_id
               ),
             } as EnrollmentDetails)
-        )
-      )
+        );
+        return this.filterEnrolment(enrollments, currentUser);
+      })
     );
   }
 
@@ -102,9 +150,9 @@ export class LmsSandboxService {
   }
 
   getTopicDetails(): Observable<TopicDetails[]> {
-    return this.getState().pipe(
-      map((state: LmsState) =>
-        state.topics.map(
+    return combineLatest([this.getState(), this.getCurrentUser()]).pipe(
+      map(([state, currentUser]) => {
+        const topics = state.topics.map(
           (topic: {
             course_id: any;
             topic_posted_by_user_id: any;
@@ -130,29 +178,30 @@ export class LmsSandboxService {
                   ),
                 })),
             } as TopicDetails)
-        )
-      )
+        );
+        return this.filterTopicDetails(topics, currentUser);
+      })
     );
   }
 
   // Actions
   loadData(): void {
-    this.store.dispatch(loadData());
+    this.store.dispatch(LoadData());
   }
 
   deleteEnrollment(enrollment: EnrollmentDetails): void {
-    this.store.dispatch(deleteEnrollment({ enrollment }));
+    this.store.dispatch(DeleteEnrollment({ enrollment }));
   }
 
   deleteTopic(topic: TopicDetails): void {
-    this.store.dispatch(deleteTopic({ topic }));
+    this.store.dispatch(DeleteTopic({ topic }));
   }
 
   setCurrentUser(user: LoginUser | null): void {
-    this.store.dispatch(setCurrentUser({ user }));
+    this.store.dispatch(SetCurrentUser({ user }));
   }
 
   resetState(): void {
-    this.store.dispatch(resetState());
+    this.store.dispatch(ResetState());
   }
 }
