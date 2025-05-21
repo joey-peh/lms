@@ -49,7 +49,5 @@ The application is deployed on GitHub Pages at [https://joey-peh.github.io/lms](
 ## Limitations
 - **Frontend-Only**: Data is loaded from CSV files and managed in Angular state, so changes (e.g., deleting topics) reset on page refresh.
 
-## Screenshots
-
 ## Notes
 This project was built in one week, focusing on rapid development and SPA functionality. The use of 14 charts explores diverse visualizations to provide instructor insights, with potential for refinement based on specific data needs.
