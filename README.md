@@ -1,59 +1,55 @@
-# LmsSpa
+# Learning Management System (SPA)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.11.
+## Overview
+This **Single Page Application (SPA)**, built with **Angular**, provides a Learning Management System (LMS) dashboard and discussions interface. Developed in **one week** as a proof-of-concept for an interview project, it visualizes course data and manages discussions with role-based permissions. The application is deployed on **GitHub Pages** for easy access and verification.
 
-## Development server
+## Features
+- **Dashboard**:
+  - Displays **14 charts** and **2 tables** to visualize course data (e.g., enrollment trends) loaded from CSV files.
+  - Each chart includes a descriptive annotation to justify its relevance for instructors.
+- **Discussions**:
+  - Simple UI for viewing and managing discussion topics.
+  - Role-based permissions:
+    - **Admin** (username: `admin`): View all course data and delete any topic or enrollment.
+    - **Instructor** (username: `user_115`, "Web Development" course): View course-specific data and delete own topics.
+- Data managed in **Angular state**, with session-based manipulation (non-persistent due to frontend-only design).
 
-To start a local development server, run:
+## Tech Stack
+- **Frontend**: Angular, JavaScript, HTML, CSS
+- **Data Visualization**: Chart.js 
+- **Data Source**: CSV files
+- **Deployment**: GitHub Pages
+- **Version Control**: Git
 
-```bash
-ng serve
-```
+## Setup Instructions
+To run the project locally:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/joey-peh/lms.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd lms
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the development server:
+   ```bash
+   npm start
+   ```
+5. Open `http://localhost:4200` in your browser to view the application.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Deployment
+The application is deployed on GitHub Pages at [https://joey-peh.github.io/lms](https://joey-peh.github.io/lms). Access it using:
+- **Admin Account**: Username: `admin`, Password: `a123` (full access to all courses and topics).
+- **Instructor Account**: Username: `o6v7dy55`, Password: `i123` (access to "Web Development" course data only).
 
-## Code scaffolding
+## Limitations
+- **Frontend-Only**: Data is loaded from CSV files and managed in Angular state, so changes (e.g., deleting topics) reset on page refresh.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Screenshots
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Notes
+This project was built in one week, focusing on rapid development and SPA functionality. The use of 14 charts explores diverse visualizations to provide instructor insights, with potential for refinement based on specific data needs.
