@@ -10,8 +10,8 @@ This **Single Page Application (SPA)**, built with **Angular**, provides a Learn
 - **Discussions**:
   - Simple UI for viewing and managing discussion topics.
   - Role-based permissions:
-    - **Admin** (username: `admin`): View all course data and delete any topic or enrollment.
-    - **Instructor** (username: `user_115`, "Web Development" course): View course-specific data and delete own topics.
+    - **Admin** (Name: `admin`): View all course data and delete any topic or enrollment.
+    - **Instructor** (Name: `user_115`, "Web Development" course): View course-specific data and delete own topics.
 - Data managed in **Angular state**, with session-based manipulation (non-persistent due to frontend-only design).
 
 ## Tech Stack
@@ -43,8 +43,8 @@ To run the project locally:
 
 ## Deployment
 The application is deployed on GitHub Pages at [https://joey-peh.github.io/lms](https://joey-peh.github.io/lms). Access it using:
-- **Admin Account**: Username: `admin`, Password: `a123` (full access to all courses and topics).
-- **Instructor Account**: Username: `o6v7dy55`, Password: `i123` (access to "Web Development" course data only).
+- **Admin Account**: LoginID: `admin`, Password: `a123` (full access to all courses and topics).
+- **Instructor Account**: LoginID: `o6v7dy55`, Password: `i123` (access to "Web Development" course data only).
 
 ## Limitations
 - **Frontend-Only**: Data is loaded from CSV files and managed in Angular state, so changes (e.g., deleting topics) reset on page refresh.
