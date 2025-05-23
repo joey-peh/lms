@@ -1,7 +1,7 @@
 # Learning Management System (SPA)
 
 ## Overview
-This **Single Page Application (SPA)**, built with **Angular**, provides a Learning Management System (LMS) dashboard and discussions interface. Developed in **one week** as a proof-of-concept for an interview project, it visualizes course data and manages discussions with role-based permissions. The application is deployed on **GitHub Pages** for easy access and verification.
+This **Single Page Application (SPA)**, built with **Angular**, provides a Learning Management System (LMS) dashboard and discussions interface. Developed in **one week**, it visualizes course data and manages discussions with role-based permissions. The application is deployed on **GitHub Pages** for easy access and verification.
 
 ## Features
 - **Dashboard**:
