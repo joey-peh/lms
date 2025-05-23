@@ -9,7 +9,7 @@ This **Single Page Application (SPA)**, built with **Angular**, provides a Learn
   - Each chart includes a descriptive annotation to justify its relevance for instructors.
 - **Discussions**:
   - Simple UI for viewing and managing discussion topics.
-  - Role-based permissions:
+- **Role-based permissions**:
     - **Admin** (Name: `admin`): View all course data and delete any topic or enrollment.
     - **Instructor** (Name: `user_115`, "Web Development" course): View course-specific data and delete own topics.
 - Data managed in **Angular state**, with session-based manipulation (non-persistent due to frontend-only design).
