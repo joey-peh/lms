@@ -39,6 +39,10 @@ export class UserComponent extends BaseUserComponent implements OnInit {
     super.ngOnInit();
     this.enrollmentData$ = this.sandbox.getEnrollmentDetails();
     this.enrollmentData$.subscribe((enrollment) => {
+      if(this.user.role !== 'admin'){
+        enrollment = enrollment.filter(x => x.enrollment_type === 'student');
+      }
+
       var { columnConfigs, displayedColumns } =
         this.commonService.configureBaseColumnConfig(
           enrollment,
@@ -80,7 +84,6 @@ export class UserComponent extends BaseUserComponent implements OnInit {
           ? 'Get list of all enrollments'
           : 'Get list of student enrollments under instructor';
 
-      enrollment = enrollment.filter(x => x.enrollment_type === 'student');
       this.userData.dataSource.data = enrollment;
       this.userData.columnConfigs = columnConfigs;
       this.userData.displayedColumns = displayedColumns;

@@ -205,11 +205,16 @@ export class DashboardComponent extends BaseUserComponent implements OnInit {
         link: () => this.toggleChart('entries'),
       },
       {
-        title: this.user.role === 'admin' ? 'Enrollments' : 'Students',
+        title:
+          this.user.role === 'admin' ? 'Active Enrollments' : 'Active Students',
         value:
           this.user.role === 'admin'
-            ? enrollments.length
-            : enrollments.filter((e) => e.enrollment_type === 'student').length,
+            ? enrollments.filter((e) => e.enrollment_state === 'active').length
+            : enrollments.filter(
+                (e) =>
+                  e.enrollment_state === 'active' &&
+                  e.enrollment_type === 'student'
+              ).length,
         icon: 'group',
         link: () => this.toggleChart('students'),
       },

@@ -47,6 +47,7 @@ export class LmsSandboxService {
     if (!currentUser) return [];
     if (currentUser.role === 'admin') return enrollments;
     return enrollments.filter(
+      //filter course specific enrollments
       (enrollment) =>
         enrollment.enrollment_state === 'active' &&
         currentUser.course_id.includes(enrollment.course_id)
